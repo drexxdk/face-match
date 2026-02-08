@@ -1,17 +1,17 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import toast from 'react-hot-toast';
-import type { PersonInsert, GenderType } from '@/lib/schemas';
+import type { PersonInsert, GenderType, Person } from '@/lib/schemas';
 import { logError, getErrorMessage } from '@/lib/logger';
 import { sanitizeName, validateLength } from '@/lib/security';
 
-export function AddPersonForm({ groupId }: { groupId: string }) {
+export function AddPersonForm({ groupId, people = [] }: { groupId: string; people?: Person[] }) {
   const cropContainerRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
@@ -37,14 +37,30 @@ export function AddPersonForm({ groupId }: { groupId: string }) {
     mouseY: 0,
   });
   const [formData, setFormData] = useState<{
-    first_name: string;
-    last_name: string;
+    name: string;
     gender: GenderType;
   }>({
-    first_name: '',
-    last_name: '',
+    name: '',
     gender: 'other',
   });
+  const [duplicateError, setDuplicateError] = useState<string>('');
+
+  // Check for duplicate names whenever the name changes
+  useEffect(() => {
+    const trimmedName = formData.name.trim();
+    if (!trimmedName) {
+      setDuplicateError('');
+      return;
+    }
+
+    const duplicate = people.find((person) => person.name.toLowerCase() === trimmedName.toLowerCase());
+
+    if (duplicate) {
+      setDuplicateError(`${duplicate.name} is already in this group`);
+    } else {
+      setDuplicateError('');
+    }
+  }, [formData.name, people]);
 
   const handleImageSelect = (file: File) => {
     // Check file type
@@ -243,8 +259,7 @@ export function AddPersonForm({ groupId }: { groupId: string }) {
 
   const handleReset = () => {
     setFormData({
-      first_name: '',
-      last_name: '',
+      name: '',
       gender: 'other',
     });
     setPreview('');
@@ -283,16 +298,21 @@ export function AddPersonForm({ groupId }: { groupId: string }) {
     e.preventDefault();
 
     // Sanitize and validate inputs
-    const firstName = sanitizeName(formData.first_name);
-    const lastName = sanitizeName(formData.last_name);
+    const name = sanitizeName(formData.name);
 
-    if (!firstName || !lastName) {
-      toast.error('Please enter first and last name');
+    if (!name) {
+      toast.error('Please enter a name');
       return;
     }
 
-    if (!validateLength(firstName, 50, 1) || !validateLength(lastName, 50, 1)) {
-      toast.error('Names must be between 1 and 50 characters');
+    if (!validateLength(name, 100, 1)) {
+      toast.error('Name must be between 1 and 100 characters');
+      return;
+    }
+
+    // Check for duplicate (should already be caught by real-time validation)
+    if (duplicateError) {
+      toast.error(duplicateError);
       return;
     }
 
@@ -306,11 +326,10 @@ export function AddPersonForm({ groupId }: { groupId: string }) {
         .from('people')
         .select('*, group_people!inner(group_id)')
         .eq('group_people.group_id', groupId)
-        .ilike('first_name', firstName)
-        .ilike('last_name', lastName);
+        .ilike('name', name);
 
       if (existingPeople && existingPeople.length > 0) {
-        toast.error(`${firstName} ${lastName} is already in this group`);
+        toast.error(`${name} is already in this group`);
         setLoading(false);
         return;
       }
@@ -342,8 +361,7 @@ export function AddPersonForm({ groupId }: { groupId: string }) {
 
       // Build the person object with sanitized values
       const personData: PersonInsert = {
-        first_name: firstName,
-        last_name: lastName,
+        name: name,
         gender: formData.gender,
       };
 
@@ -383,8 +401,7 @@ export function AddPersonForm({ groupId }: { groupId: string }) {
 
       // Reset form
       setFormData({
-        first_name: '',
-        last_name: '',
+        name: '',
         gender: 'other',
       });
       setPreview('');
@@ -392,7 +409,7 @@ export function AddPersonForm({ groupId }: { groupId: string }) {
       setOriginalImage('');
       setShowCropper(false);
 
-      toast.success(`${formData.first_name} ${formData.last_name} added!`);
+      toast.success(`${name} added!`);
       // Let real-time subscription handle the update
     } catch (err: unknown) {
       logError(err);
@@ -405,48 +422,34 @@ export function AddPersonForm({ groupId }: { groupId: string }) {
   return (
     <>
       <form onSubmit={handleSubmit} className="relative flex flex-col gap-4" suppressHydrationWarning>
-        <div className="grid grid-cols-2 gap-4" suppressHydrationWarning>
-          <div className="flex flex-col gap-2" suppressHydrationWarning>
-            <Label htmlFor="first_name">
-              First Name{' '}
-              <span className="text-destructive" aria-label="required">
-                *
-              </span>
-            </Label>
-            <div suppressHydrationWarning>
-              <Input
-                id="first_name"
-                value={formData.first_name}
-                onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                autoComplete="one-time-code"
-                data-1p-ignore
-                data-lpignore="true"
-                required
-                aria-required="true"
-                disabled={loading}
-              />
-            </div>
-          </div>
-          <div className="flex flex-col gap-2" suppressHydrationWarning>
-            <Label htmlFor="last_name">
-              Last Name{' '}
-              <span className="text-destructive" aria-label="required">
-                *
-              </span>
-            </Label>
-            <div suppressHydrationWarning>
-              <Input
-                id="last_name"
-                value={formData.last_name}
-                onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                autoComplete="one-time-code"
-                data-1p-ignore
-                data-lpignore="true"
-                required
-                aria-required="true"
-                disabled={loading}
-              />
-            </div>
+        <div className="flex flex-col gap-2" suppressHydrationWarning>
+          <Label htmlFor="name">
+            Name{' '}
+            <span className="text-destructive" aria-label="required">
+              *
+            </span>
+          </Label>
+          <div suppressHydrationWarning>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="Full name"
+              autoComplete="one-time-code"
+              data-1p-ignore
+              data-lpignore="true"
+              required
+              aria-required="true"
+              aria-invalid={duplicateError ? 'true' : 'false'}
+              aria-describedby={duplicateError ? 'name-error' : undefined}
+              disabled={loading}
+              className={duplicateError ? 'border-destructive' : ''}
+            />
+            {duplicateError && (
+              <p id="name-error" className="text-destructive mt-1 text-sm">
+                {duplicateError}
+              </p>
+            )}
           </div>
         </div>
 
@@ -666,7 +669,7 @@ export function AddPersonForm({ groupId }: { groupId: string }) {
             </Button>
             <Button
               type="submit"
-              disabled={!formData.first_name.trim() || !formData.last_name.trim() || !selectedFile}
+              disabled={!formData.name.trim() || !selectedFile}
               loading={loading}
               loadingText="Adding..."
               className="flex-1"

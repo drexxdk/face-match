@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, memo } from 'react';
-import { FaTrash, FaSpinner, FaCheck, FaXmark, FaUser } from 'react-icons/fa6';
+import { FaPencil, FaTrash, FaSpinner, FaCheck, FaXmark, FaUser } from 'react-icons/fa6';
 import { AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import { Icon } from '@/components/ui/icon';
@@ -20,6 +20,7 @@ const PersonCard = memo(function PersonCard({
   person,
   isDeleting,
   isConfirming,
+  onEditClick,
   onDeleteClick,
   onConfirmDelete,
   onCancelDelete,
@@ -27,40 +28,46 @@ const PersonCard = memo(function PersonCard({
   person: Person;
   isDeleting: boolean;
   isConfirming: boolean;
+  onEditClick: (person: Person) => void;
   onDeleteClick: (person: Person) => void;
   onConfirmDelete: (person: Person) => void;
   onCancelDelete: () => void;
 }) {
   return (
-    <Card
-      hover
-      variant="compact"
-      role="article"
-      aria-label={`Person: ${person.first_name} ${person.last_name}`}
-      className="relative"
-    >
+    <Card hover variant="compact" role="article" aria-label={`Person: ${person.name}`} className="relative">
       <div className="flex items-center gap-4">
         <AvatarImage
           src={person.image_url}
-          alt={`Photo of ${person.first_name} ${person.last_name}`}
-          fallbackName={`${person.first_name} ${person.last_name}`}
+          alt={`Photo of ${person.name}`}
+          fallbackName={person.name}
           className="size-12"
         />
         <div className="flex-1">
           <p className="font-medium" id={`person-name-${person.id}`}>
-            {person.first_name} {person.last_name}
+            {person.name}
           </p>
           <p className="text-muted-foreground text-sm capitalize">{person.gender}</p>
         </div>
-        <Button
-          variant="destructive"
-          onClick={() => onDeleteClick(person)}
-          disabled={isDeleting}
-          size="icon"
-          aria-label={`Delete ${person.first_name} ${person.last_name}`}
-        >
-          <Icon icon={FaTrash} size="sm" />
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => onEditClick(person)}
+            disabled={isDeleting}
+            size="icon"
+            aria-label={`Edit ${person.name}`}
+          >
+            <Icon icon={FaPencil} size="sm" />
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() => onDeleteClick(person)}
+            disabled={isDeleting}
+            size="icon"
+            aria-label={`Delete ${person.name}`}
+          >
+            <Icon icon={FaTrash} size="sm" />
+          </Button>
+        </div>
       </div>
 
       {/* Confirmation overlay */}
@@ -88,7 +95,7 @@ const PersonCard = memo(function PersonCard({
   );
 });
 
-export function PeopleList({ people }: { people: Person[] }) {
+export function PeopleList({ people, onEditClick }: { people: Person[]; onEditClick: (person: Person) => void }) {
   const [deleting, setDeleting] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
 
@@ -147,6 +154,7 @@ export function PeopleList({ people }: { people: Person[] }) {
               person={person}
               isDeleting={deleting === person.id}
               isConfirming={confirmingDelete === person.id}
+              onEditClick={onEditClick}
               onDeleteClick={handleDeleteClick}
               onConfirmDelete={handleConfirmDelete}
               onCancelDelete={handleCancelDelete}

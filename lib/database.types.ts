@@ -1,4 +1,4 @@
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+﻿export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
@@ -131,42 +131,6 @@ export type Database = {
           },
         ];
       };
-      groups: {
-        Row: {
-          created_at: string | null;
-          creator_id: string;
-          enable_timer: boolean | null;
-          id: string;
-          name: string;
-          options_count: number | null;
-          share_code: string | null;
-          time_limit_seconds: number | null;
-          updated_at: string | null;
-        };
-        Insert: {
-          created_at?: string | null;
-          creator_id: string;
-          enable_timer?: boolean | null;
-          id?: string;
-          name: string;
-          options_count?: number | null;
-          share_code?: string | null;
-          time_limit_seconds?: number | null;
-          updated_at?: string | null;
-        };
-        Update: {
-          created_at?: string | null;
-          creator_id?: string;
-          enable_timer?: boolean | null;
-          id?: string;
-          name?: string;
-          options_count?: number | null;
-          share_code?: string | null;
-          time_limit_seconds?: number | null;
-          updated_at?: string | null;
-        };
-        Relationships: [];
-      };
       group_people: {
         Row: {
           created_at: string | null;
@@ -203,32 +167,65 @@ export type Database = {
           },
         ];
       };
-      people: {
+      groups: {
         Row: {
           created_at: string | null;
-          first_name: string;
-          gender: Database['public']['Enums']['gender_type'];
+          creator_id: string;
+          enable_timer: boolean | null;
           id: string;
-          image_url: string | null;
-          last_name: string;
+          name: string;
+          options_count: number | null;
+          share_code: string | null;
+          time_limit_seconds: number | null;
           updated_at: string | null;
         };
         Insert: {
           created_at?: string | null;
-          first_name: string;
-          gender: Database['public']['Enums']['gender_type'];
+          creator_id: string;
+          enable_timer?: boolean | null;
           id?: string;
-          image_url?: string | null;
-          last_name: string;
+          name: string;
+          options_count?: number | null;
+          share_code?: string | null;
+          time_limit_seconds?: number | null;
           updated_at?: string | null;
         };
         Update: {
           created_at?: string | null;
-          first_name?: string;
+          creator_id?: string;
+          enable_timer?: boolean | null;
+          id?: string;
+          name?: string;
+          options_count?: number | null;
+          share_code?: string | null;
+          time_limit_seconds?: number | null;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
+      people: {
+        Row: {
+          created_at: string | null;
+          gender: Database['public']['Enums']['gender_type'];
+          id: string;
+          image_url: string | null;
+          name: string;
+          updated_at: string | null;
+        };
+        Insert: {
+          created_at?: string | null;
+          gender: Database['public']['Enums']['gender_type'];
+          id?: string;
+          image_url?: string | null;
+          name: string;
+          updated_at?: string | null;
+        };
+        Update: {
+          created_at?: string | null;
           gender?: Database['public']['Enums']['gender_type'];
           id?: string;
           image_url?: string | null;
-          last_name?: string;
+          name?: string;
           updated_at?: string | null;
         };
         Relationships: [];
@@ -271,16 +268,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      generate_game_code: {
-        Args: Record<string, never>;
-        Returns: string;
-      };
-      generate_group_share_code: {
-        Args: {
-          group_id_param: string;
-        };
-        Returns: string;
-      };
+      generate_game_code: { Args: never; Returns: string };
+      generate_group_share_code:
+        | { Args: never; Returns: string }
+        | { Args: { group_id_param: string }; Returns: string };
     };
     Enums: {
       game_type: 'guess_name' | 'guess_image';
@@ -384,3 +375,30 @@ export type Enums<
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
     ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
     : never;
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema['CompositeTypes']
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
+    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+    : never;
+
+export const Constants = {
+  public: {
+    Enums: {
+      game_type: ['guess_name', 'guess_image'],
+      gender_type: ['male', 'female', 'other'],
+      user_role: ['teacher', 'student'],
+    },
+  },
+} as const;

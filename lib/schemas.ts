@@ -69,8 +69,7 @@ export type GroupInsert = z.infer<typeof groupInsertSchema>;
 // People
 export const personSchema = z.object({
   id: z.string().uuid(),
-  first_name: z.string().min(1),
-  last_name: z.string().min(1),
+  name: z.string().min(1),
   gender: genderTypeSchema,
   image_url: z.string().nullable(),
   created_at: z.string().nullable(),

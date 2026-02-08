@@ -6,8 +6,7 @@ import { memo } from 'react';
 
 interface AnswerOption {
   id: string;
-  first_name?: string | null;
-  last_name?: string | null;
+  name?: string | null;
   image_url?: string | null;
 }
 
@@ -66,14 +65,12 @@ export const AnswerOptions = memo(function AnswerOptions({
             size={gameType === 'guess_image' ? 'default' : 'lg'}
             aria-label={
               gameType === 'guess_name'
-                ? `Answer option ${index + 1}: ${option.first_name} ${option.last_name}. Press ${index + 1} key to select.`
+                ? `Answer option ${index + 1}: ${option.name}. Press ${index + 1} key to select.`
                 : `Answer option ${index + 1}: Press ${index + 1} key to select.`
             }
           >
             {gameType === 'guess_name' ? (
-              <>
-                {option.first_name} {option.last_name}
-              </>
+              <>{option.name}</>
             ) : (
               <div className="h-full w-full">
                 <Image

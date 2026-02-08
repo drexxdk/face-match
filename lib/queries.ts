@@ -134,7 +134,7 @@ export async function getPeopleByGroupId(supabase: TypedSupabaseClient, groupId:
     .from('people')
     .select('*, group_people!inner(group_id)')
     .eq('group_people.group_id', groupId)
-    .order('first_name');
+    .order('name');
 
   return parseArrayFiltered(personSchema, data ?? []);
 }

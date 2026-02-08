@@ -1,9 +1,19 @@
 'use client';
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { FaPencil, FaUserGroup, FaGear, FaPlay, FaTriangleExclamation, FaShareNodes, FaCopy } from 'react-icons/fa6';
+import {
+  FaPencil,
+  FaUserGroup,
+  FaGear,
+  FaPlay,
+  FaTriangleExclamation,
+  FaShareNodes,
+  FaCopy,
+  FaPlus,
+  FaFileArrowUp,
+} from 'react-icons/fa6';
 import { PeopleList } from '@/components/people-list';
-import { AddPersonForm } from '@/components/add-person-form';
+import { PersonModal } from '@/components/person-modal';
 import { BulkUploadPeople } from '@/components/bulk-upload-people';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
@@ -36,11 +46,13 @@ export function GroupDetailClient({
   const [updatedGroupData, setUpdatedGroupData] = useState<Group>(groupData);
   const [people, setPeople] = useState<Person[]>(initialPeople);
   const [isEditingSettings, setIsEditingSettings] = useState(false);
-  const [uploadMode, setUploadMode] = useState<'single' | 'bulk'>('single');
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [shareCode, setShareCode] = useState<string | null>(null);
   const [isGeneratingCode, setIsGeneratingCode] = useState(false);
   const [shareUrl, setShareUrl] = useState('');
+  const [showPersonModal, setShowPersonModal] = useState(false);
+  const [editPerson, setEditPerson] = useState<Person | null>(null);
+  const [showBulkUpload, setShowBulkUpload] = useState(false);
 
   // Reset loading state when component mounts
   useEffect(() => {
@@ -53,9 +65,7 @@ export function GroupDetailClient({
     if (!updatedPerson?.id) return;
     logger.log('UPDATE event received:', updatedPerson);
     setPeople((prev) =>
-      prev
-        .map((p) => (p.id === updatedPerson.id ? updatedPerson : p))
-        .sort((a, b) => a.first_name.localeCompare(b.first_name)),
+      prev.map((p) => (p.id === updatedPerson.id ? updatedPerson : p)).sort((a, b) => a.name.localeCompare(b.name)),
     );
   }, []);
 
@@ -75,7 +85,7 @@ export function GroupDetailClient({
           // Check if person already exists to prevent duplicates
           const exists = prev.some((p) => p.id === person.id);
           if (exists) return prev;
-          return [...prev, person].sort((a, b) => a.first_name.localeCompare(b.first_name));
+          return [...prev, person].sort((a, b) => a.name.localeCompare(b.name));
         });
       }
     },
@@ -117,7 +127,8 @@ export function GroupDetailClient({
     [groupId, handleGroupPeopleInsert, handleGroupPeopleDelete, handleUpdate],
   );
 
-  useMultiRealtimeSubscription<Person>(realtimeConfig);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  useMultiRealtimeSubscription(realtimeConfig as any);
 
   // Refresh people list after bulk upload to ensure consistency with database
   const handleBulkUploadComplete = useCallback(async () => {
@@ -126,12 +137,23 @@ export function GroupDetailClient({
       .from('people')
       .select('*, group_people!inner(group_id)')
       .eq('group_people.group_id', groupId)
-      .order('first_name');
+      .order('name');
 
     if (!error && data) {
       setPeople(data);
     }
+    setShowBulkUpload(false);
   }, [groupId]);
+
+  const handleAddPersonClick = () => {
+    setEditPerson(null);
+    setShowPersonModal(true);
+  };
+
+  const handleEditPersonClick = (person: Person) => {
+    setEditPerson(person);
+    setShowPersonModal(true);
+  };
 
   // Update share URL when share code changes (client-side only to avoid hydration issues)
   useEffect(() => {
@@ -292,39 +314,28 @@ export function GroupDetailClient({
             </CardContent>
           </Card>
 
-          {/* Add Person */}
-          <SectionCard title="Add Person" description="Add new people to this group">
-            <div className="flex flex-col gap-4" suppressHydrationWarning>
-              <div className="flex gap-2">
-                <Button
-                  variant={uploadMode === 'single' ? 'default' : 'outline'}
-                  onClick={() => setUploadMode('single')}
-                  className="flex-1"
-                >
-                  Single Person
-                </Button>
-                <Button
-                  variant={uploadMode === 'bulk' ? 'default' : 'outline'}
-                  onClick={() => setUploadMode('bulk')}
-                  className="flex-1"
-                >
-                  Bulk Upload (CSV)
-                </Button>
-              </div>
-              <div suppressHydrationWarning>
-                {uploadMode === 'single' ? (
-                  <AddPersonForm groupId={groupId} />
-                ) : (
-                  <BulkUploadPeople groupId={groupId} onComplete={handleBulkUploadComplete} />
-                )}
-              </div>
-            </div>
-          </SectionCard>
+          {/* Add Person Actions */}
+          <Card variant="compact">
+            <CardHeader>
+              <CardTitle>Add People</CardTitle>
+              <CardDescription>Add people to this group individually or in bulk</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-2">
+              <Button onClick={handleAddPersonClick} className="w-full gap-2">
+                <Icon icon={FaPlus} size="md" />
+                Add Person
+              </Button>
+              <Button onClick={() => setShowBulkUpload(true)} variant="outline" className="w-full gap-2">
+                <Icon icon={FaFileArrowUp} size="md" />
+                Bulk Upload (CSV)
+              </Button>
+            </CardContent>
+          </Card>
         </div>
 
         <div>
           <SectionCard title="People" description="Manage people in this group">
-            <PeopleList people={people} />
+            <PeopleList people={people} onEditClick={handleEditPersonClick} />
           </SectionCard>
         </div>
       </div>
@@ -378,6 +389,29 @@ export function GroupDetailClient({
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Person Modal (Add/Edit) */}
+      <PersonModal
+        open={showPersonModal}
+        onOpenChange={setShowPersonModal}
+        groupId={groupId}
+        people={people}
+        editPerson={editPerson}
+      />
+
+      {/* Bulk Upload Modal */}
+      <Dialog open={showBulkUpload} onOpenChange={setShowBulkUpload}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Bulk Upload People</DialogTitle>
+            <DialogDescription>
+              Import multiple people at once using a CSV file. Include base64 encoded images or leave them blank to
+              upload during review.
+            </DialogDescription>
+          </DialogHeader>
+          <BulkUploadPeople groupId={groupId} people={people} onComplete={handleBulkUploadComplete} />
         </DialogContent>
       </Dialog>
     </div>

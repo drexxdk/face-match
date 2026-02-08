@@ -9,13 +9,14 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import toast from 'react-hot-toast';
 import Image from 'next/image';
-import type { GenderType } from '@/lib/schemas';
+import type { GenderType, Person } from '@/lib/schemas';
 import { logError, getErrorMessage } from '@/lib/logger';
 import { sanitizeName, validateLength } from '@/lib/security';
+import { useNameValidation } from '@/lib/hooks/use-name-validation';
+import { validateImageFile } from '@/lib/image-validation';
 
 interface CSVRow {
-  first_name: string;
-  last_name: string;
+  name: string;
   gender: GenderType;
   image_url?: string;
 }
@@ -25,7 +26,15 @@ interface ProcessedPerson extends CSVRow {
   croppedImage?: File;
 }
 
-export function BulkUploadPeople({ groupId, onComplete }: { groupId: string; onComplete?: () => void }) {
+export function BulkUploadPeople({
+  groupId,
+  people = [],
+  onComplete,
+}: {
+  groupId: string;
+  people?: Person[];
+  onComplete?: () => void;
+}) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const cropContainerRef = useRef<HTMLDivElement>(null);
@@ -68,6 +77,24 @@ export function BulkUploadPeople({ groupId, onComplete }: { groupId: string; onC
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
 
+  // Duplicate name validation - checking names already in the group and names being added in this batch
+  const currentNameToCheck = editingPerson?.name || '';
+  const { duplicateError: duplicateInGroup } = useNameValidation({
+    people,
+    currentName: currentNameToCheck,
+  });
+
+  // Check for duplicates within the current batch (excluding current person at currentIndex)
+  const duplicateInBatch =
+    editingPerson &&
+    processedPeople.some(
+      (p, index) =>
+        p.status === 'accepted' && p.name.toLowerCase() === currentNameToCheck.toLowerCase() && index !== currentIndex,
+    );
+
+  const duplicateError =
+    duplicateInGroup || (duplicateInBatch ? `${editingPerson.name} is already being added in this batch` : '');
+
   const parseCSVLine = (line: string): string[] => {
     const values: string[] = [];
     let current = '';
@@ -103,28 +130,25 @@ export function BulkUploadPeople({ groupId, onComplete }: { groupId: string; onC
     if (lines.length < 2) return [];
 
     const headers = parseCSVLine(lines[0]).map((h) => h.trim().toLowerCase());
-    const firstNameIndex = headers.indexOf('first_name');
-    const lastNameIndex = headers.indexOf('last_name');
+    const nameIndex = headers.indexOf('name');
     const genderIndex = headers.indexOf('gender');
     const imageUrlIndex = headers.indexOf('image_url');
 
-    if (firstNameIndex === -1 || lastNameIndex === -1) {
-      toast.error('CSV must have first_name and last_name columns');
+    if (nameIndex === -1) {
+      toast.error('CSV must have a name column');
       return [];
     }
 
     const rows: CSVRow[] = [];
     for (let i = 1; i < lines.length; i++) {
       const values = parseCSVLine(lines[i]);
-      const firstName = values[firstNameIndex] || '';
-      const lastName = values[lastNameIndex] || '';
+      const name = values[nameIndex] || '';
       const gender = (values[genderIndex] || 'other') as GenderType;
       const imageUrl = imageUrlIndex !== -1 ? values[imageUrlIndex] : undefined;
 
-      if (firstName && lastName) {
+      if (name) {
         rows.push({
-          first_name: firstName,
-          last_name: lastName,
+          name: name,
           gender: ['male', 'female', 'other'].includes(gender) ? gender : 'other',
           image_url: imageUrl && imageUrl.trim() ? imageUrl.trim() : undefined,
         });
@@ -283,8 +307,8 @@ export function BulkUploadPeople({ groupId, onComplete }: { groupId: string; onC
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file');
+    // Validate image file type and size
+    if (!validateImageFile(file)) {
       return;
     }
 
@@ -328,8 +352,8 @@ export function BulkUploadPeople({ groupId, onComplete }: { groupId: string; onC
 
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0];
-      if (!file.type.startsWith('image/')) {
-        toast.error('Please select an image file');
+      // Validate image file type and size
+      if (!validateImageFile(file)) {
         return;
       }
 
@@ -548,8 +572,8 @@ export function BulkUploadPeople({ groupId, onComplete }: { groupId: string; onC
     const currentCroppedFile = croppedFile;
 
     // Validate required data
-    if (!currentPerson.first_name || !currentPerson.last_name) {
-      toast.error('First name and last name are required');
+    if (!currentPerson.name) {
+      toast.error('Name is required');
       return;
     }
 
@@ -560,18 +584,16 @@ export function BulkUploadPeople({ groupId, onComplete }: { groupId: string; onC
 
     // Check if person with same name already exists in this group
     const supabase = createClient();
-    const sanitizedFirstName = sanitizeName(currentPerson.first_name);
-    const sanitizedLastName = sanitizeName(currentPerson.last_name);
+    const sanitizedName = sanitizeName(currentPerson.name);
 
     const { data: existingPeople } = await supabase
       .from('people')
       .select('*, group_people!inner(group_id)')
       .eq('group_people.group_id', groupId)
-      .ilike('first_name', sanitizedFirstName)
-      .ilike('last_name', sanitizedLastName);
+      .ilike('name', sanitizedName);
 
     if (existingPeople && existingPeople.length > 0) {
-      toast.error(`${currentPerson.first_name} ${currentPerson.last_name} is already in this group`);
+      toast.error(`${currentPerson.name} is already in this group`);
       return;
     }
 
@@ -627,15 +649,14 @@ export function BulkUploadPeople({ groupId, onComplete }: { groupId: string; onC
     try {
       for (const person of acceptedPeople) {
         try {
-          const sanitizedFirstName = sanitizeName(person.first_name);
-          const sanitizedLastName = sanitizeName(person.last_name);
+          const sanitizedName = sanitizeName(person.name);
 
-          if (!sanitizedFirstName || !sanitizedLastName) {
+          if (!sanitizedName) {
             throw new Error('Invalid name format');
           }
 
-          if (!validateLength(sanitizedFirstName, 50, 1) || !validateLength(sanitizedLastName, 50, 1)) {
-            throw new Error('Names must be between 1-50 characters');
+          if (!validateLength(sanitizedName, 100, 1)) {
+            throw new Error('Name must be between 1-100 characters');
           }
 
           // Check if person with same name already exists in this group
@@ -643,17 +664,16 @@ export function BulkUploadPeople({ groupId, onComplete }: { groupId: string; onC
             .from('people')
             .select('*, group_people!inner(group_id)')
             .eq('group_people.group_id', groupId)
-            .ilike('first_name', sanitizedFirstName)
-            .ilike('last_name', sanitizedLastName);
+            .ilike('name', sanitizedName);
 
           if (existingPeople && existingPeople.length > 0) {
-            throw new Error(`${sanitizedFirstName} ${sanitizedLastName} is already in this group`);
+            throw new Error(`${sanitizedName} is already in this group`);
           }
 
           let imageUrl: string | undefined;
 
           if (person.croppedImage) {
-            const fileName = `${Date.now()}-${sanitizedFirstName}-${sanitizedLastName}.jpg`;
+            const fileName = `${Date.now()}-${sanitizedName.replace(/\s+/g, '-')}.jpg`;
             const { data: uploadData, error: uploadError } = await supabase.storage
               .from('person-images')
               .upload(fileName, person.croppedImage, {
@@ -671,8 +691,7 @@ export function BulkUploadPeople({ groupId, onComplete }: { groupId: string; onC
           const { data: newPerson, error: insertError } = await supabase
             .from('people')
             .insert({
-              first_name: sanitizedFirstName,
-              last_name: sanitizedLastName,
+              name: sanitizedName,
               gender: person.gender,
               image_url: imageUrl,
             })
@@ -696,7 +715,7 @@ export function BulkUploadPeople({ groupId, onComplete }: { groupId: string; onC
           successCount++;
         } catch (err) {
           errorCount++;
-          logError(`Failed to upload person ${person.first_name} ${person.last_name}`, err);
+          logError(`Failed to upload person ${person.name}`, err);
         }
       }
 
@@ -735,8 +754,9 @@ export function BulkUploadPeople({ groupId, onComplete }: { groupId: string; onC
   };
 
   const downloadTemplate = () => {
-    const template =
-      'first_name,last_name,gender,image_url\nJohn,Doe,male,"data:image/jpeg;base64,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"\nJane,Smith,female,';
+    const template = `name,gender,image_url
+John Doe,male,"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlbaXmJmgoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD3+iiigD//2Q=="
+Jane Smith,female,`;
     const blob = new Blob([template], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -746,7 +766,7 @@ export function BulkUploadPeople({ groupId, onComplete }: { groupId: string; onC
     URL.revokeObjectURL(url);
   };
 
-  const isFormValid = editingPerson && editingPerson.first_name.trim() && editingPerson.last_name.trim() && preview; // Photo is required - must have uploaded/cropped an image
+  const isFormValid = editingPerson && editingPerson.name.trim() && preview && !duplicateError; // Photo is required - must have uploaded/cropped an image
 
   // Show person editor
   if (editingPerson) {
@@ -762,39 +782,28 @@ export function BulkUploadPeople({ groupId, onComplete }: { groupId: string; onC
 
         <div className="bg-muted/30 flex flex-col gap-4 rounded-lg border p-4">
           <div suppressHydrationWarning>
-            <Label htmlFor="first-name">First Name</Label>
+            <Label htmlFor="name">Name</Label>
             <Input
-              id="first-name"
-              value={editingPerson.first_name}
+              id="name"
+              value={editingPerson.name}
               onChange={(e) => {
                 const value = e.target.value;
                 setEditingPerson((prev) => {
-                  const next = prev ? { ...prev, first_name: value } : null;
+                  const next = prev ? { ...prev, name: value } : null;
                   editingPersonRef.current = next; // Update ref synchronously
                   return next;
                 });
               }}
-              className="mt-1"
+              className={`mt-1 ${duplicateError ? 'border-destructive' : ''}`}
               disabled={uploading}
+              aria-invalid={duplicateError ? 'true' : 'false'}
+              aria-describedby={duplicateError ? 'name-error' : undefined}
             />
-          </div>
-
-          <div suppressHydrationWarning>
-            <Label htmlFor="last-name">Last Name</Label>
-            <Input
-              id="last-name"
-              value={editingPerson.last_name}
-              onChange={(e) => {
-                const value = e.target.value;
-                setEditingPerson((prev) => {
-                  const next = prev ? { ...prev, last_name: value } : null;
-                  editingPersonRef.current = next; // Update ref synchronously
-                  return next;
-                });
-              }}
-              className="mt-1"
-              disabled={uploading}
-            />
+            {duplicateError && (
+              <p id="name-error" className="text-destructive mt-1 text-sm">
+                {duplicateError}
+              </p>
+            )}
           </div>
 
           <div suppressHydrationWarning>
@@ -1083,7 +1092,8 @@ export function BulkUploadPeople({ groupId, onComplete }: { groupId: string; onC
       <div>
         <Label htmlFor="csv-upload">Upload CSV File</Label>
         <p className="text-muted-foreground text-sm">
-          Import multiple people at once. You&apos;ll review and crop each person&apos;s photo individually.
+          Import multiple people at once. You can include base64 encoded images in the CSV or leave image_url blank to
+          upload photos during review.
         </p>
         <input
           ref={fileInputRef}

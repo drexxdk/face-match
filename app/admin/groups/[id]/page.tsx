@@ -27,7 +27,7 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
     .from('people')
     .select('*, group_people!inner(group_id)')
     .eq('group_people.group_id', id)
-    .order('first_name', { ascending: true });
+    .order('name', { ascending: true });
 
   return <GroupDetailClient groupData={groupData as unknown as Group} initialPeople={people || []} groupId={id} />;
 }

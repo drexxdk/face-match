@@ -844,9 +844,7 @@ function ActiveGameState({ state }: { state: ActiveState }) {
                 <Card className="shrink-0 justify-center">
                   <CardHeader>
                     <CardTitle className="text-center text-2xl">
-                      {state.gameType === 'guess_name'
-                        ? 'Who is this?'
-                        : 'Who is ' + state.question.person.first_name + ' ' + state.question.person.last_name + '?'}
+                      {state.gameType === 'guess_name' ? 'Who is this?' : 'Who is ' + state.question.person.name + '?'}
                     </CardTitle>
                   </CardHeader>
                   {state.gameType === 'guess_name' && (
@@ -900,7 +898,7 @@ function ActiveGameState({ state }: { state: ActiveState }) {
                         variant={buttonVariant}
                         aria-label={
                           state.gameType === 'guess_name'
-                            ? `Select ${option.first_name} ${option.last_name}${isSelected ? ' (selected)' : ''}${state.answered && isCorrect ? ' (correct answer)' : ''}${state.answered && isSelected && !isCorrect ? ' (incorrect)' : ''}`
+                            ? `Select ${option.name}${isSelected ? ' (selected)' : ''}${state.answered && isCorrect ? ' (correct answer)' : ''}${state.answered && isSelected && !isCorrect ? ' (incorrect)' : ''}`
                             : `Select option ${state.question.options.indexOf(option) + 1}${isSelected ? ' (selected)' : ''}${state.answered && isCorrect ? ' (correct answer)' : ''}${state.answered && isSelected && !isCorrect ? ' (incorrect)' : ''}`
                         }
                         aria-pressed={isSelected}
@@ -909,9 +907,7 @@ function ActiveGameState({ state }: { state: ActiveState }) {
                       >
                         <span className="flex w-full items-center justify-between">
                           {state.gameType === 'guess_name' ? (
-                            <span className="flex-1 truncate text-left">
-                              {option.first_name} {option.last_name}
-                            </span>
+                            <span className="flex-1 truncate text-left">{option.name}</span>
                           ) : (
                             <div
                               key={`option-image-${state.currentQuestion}-${option.id}`}
@@ -919,7 +915,7 @@ function ActiveGameState({ state }: { state: ActiveState }) {
                             >
                               <Image
                                 src={option.image_url || '/placeholder.png'}
-                                alt={`${option.first_name} ${option.last_name}`}
+                                alt={option.name || 'Option image'}
                                 width={200}
                                 height={200}
                                 priority={true}

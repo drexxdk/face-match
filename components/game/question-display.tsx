@@ -17,10 +17,10 @@ export const QuestionDisplay = memo(function QuestionDisplay({
   currentQuestion,
 }: QuestionDisplayProps) {
   return (
-    <Card className="flex-shrink-0 justify-center">
+    <Card className="shrink-0 justify-center">
       <CardHeader>
         <CardTitle className="text-center text-2xl">
-          {gameType === 'guess_name' ? 'Who is this?' : `Who is ${person.first_name} ${person.last_name}?`}
+          {gameType === 'guess_name' ? 'Who is this?' : `Who is ${person.name}?`}
         </CardTitle>
       </CardHeader>
       {gameType === 'guess_name' && (
