@@ -1,0 +1,180 @@
+@import 'tailwindcss';
+
+@plugin 'tailwindcss-animate';
+
+@theme {
+  /* Brand Colors - Vibrant and Modern */
+  --color-brand-primary: hsl(262 83% 58%); /* Purple - main brand */
+  --color-brand-secondary: hsl(217 91% 60%); /* Blue - secondary accent */
+  --color-brand-tertiary: hsl(340 82% 52%); /* Pink - tertiary accent */
+
+  /* Semantic Colors - shadcn/ui style */
+  --color-background: hsl(240 10% 3.9%);
+  --color-foreground: hsl(0 0% 98%);
+  --color-card: hsl(240 10% 6%);
+  --color-card-foreground: hsl(0 0% 98%);
+  --color-primary: hsl(262 83% 58%);
+  --color-primary-foreground: hsl(0 0% 100%);
+  --color-secondary: hsl(240 5% 16%);
+  --color-secondary-foreground: hsl(0 0% 98%);
+  --color-muted: hsl(240 5% 14%);
+  --color-muted-foreground: hsl(240 5% 64%);
+  --color-accent: hsl(217 91% 60%);
+  --color-accent-foreground: hsl(0 0% 100%);
+  --color-destructive: hsl(0 72% 51%);
+  --color-destructive-foreground: hsl(0 0% 98%);
+  --color-border: hsl(240 5% 18%);
+  --color-input: hsl(240 5% 16%);
+  --color-ring: hsl(262 83% 58%);
+
+  /* Custom Spacing */
+  --spacing-header: 60px;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* Typography Improvements */
+  h1 {
+    @apply text-4xl font-bold tracking-tight;
+  }
+  h2 {
+    @apply text-3xl font-bold tracking-tight;
+  }
+  h3 {
+    @apply text-2xl font-semibold tracking-tight;
+  }
+  h4 {
+    @apply text-xl font-semibold;
+  }
+  h5 {
+    @apply text-lg font-medium;
+  }
+  h6 {
+    @apply text-base font-medium;
+  }
+
+  /* Focus improvements for accessibility */
+  *:focus-visible {
+    @apply outline-primary ring-primary ring-offset-background ring-2 ring-offset-2 outline-2 outline-offset-2;
+  }
+
+  /* Ensure interactive elements are keyboard accessible */
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  [role='button']:focus-visible,
+  [tabindex]:focus-visible {
+    @apply outline-primary ring-primary;
+  }
+
+  /* Screen reader only utility */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  .sr-only:focus,
+  .sr-only:active {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+
+  /* Smooth scrolling */
+  html {
+    @apply scroll-smooth;
+  }
+
+  /* Better text rendering */
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Improved readability */
+  p {
+    text-wrap: pretty;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    text-wrap: balance;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Custom animations */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Utility classes for design system */
+@layer utilities {
+  .text-gradient-primary {
+    @apply bg-linear-to-r from-[hsl(262_83%_58%)] to-[hsl(217_91%_60%)] bg-clip-text text-transparent;
+  }
+
+  .text-gradient-accent {
+    @apply to-brand-tertiary bg-linear-to-r from-[hsl(217_91%_60%)] bg-clip-text text-transparent;
+  }
+
+  .bg-gradient-primary {
+    @apply bg-linear-to-br from-[hsl(262_83%_58%)] to-[hsl(217_91%_60%)];
+  }
+
+  .bg-gradient-card {
+    @apply bg-linear-to-br from-[hsl(240_10%_8%)] to-[hsl(240_10%_4%)];
+  }
+
+  .glow-primary {
+    box-shadow: 0 0 20px hsl(262 83% 58% / 0.3);
+  }
+
+  .glow-accent {
+    box-shadow: 0 0 20px hsl(217 91% 60% / 0.3);
+  }
+
+  .glow-success {
+    box-shadow: 0 0 20px hsl(142 76% 36% / 0.3);
+  }
+
+  .glow-error {
+    box-shadow: 0 0 20px hsl(0 72% 51% / 0.3);
+  }
+}
