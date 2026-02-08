@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { Dialog as HeadlessDialog, DialogPanel, DialogTitle as HeadlessDialogTitle } from '@headlessui/react';
 import { cn } from '@/lib/utils';
 import { Button } from './button';
 
@@ -78,24 +79,24 @@ export function DialogTrigger({ children, asChild }: { children: React.ReactNode
 export function DialogContent({ children, className }: DialogContentProps) {
   const { open, onOpenChange } = React.useContext(DialogContext);
 
-  if (!open) return null;
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
-      onClick={() => onOpenChange(false)}
-    >
-      <div
-        className={cn(
-          'bg-card border-border relative flex w-full max-w-lg flex-col gap-4 rounded-xl border p-6 shadow-2xl',
-          'animate-in fade-in-0 zoom-in-95 duration-200',
-          className,
-        )}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {children}
+    <HeadlessDialog open={open} onClose={() => onOpenChange(false)} className="relative z-50">
+      {/* Backdrop */}
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" aria-hidden="true" />
+
+      {/* Full-screen container to center the panel */}
+      <div className="fixed inset-0 flex items-center justify-center p-4">
+        <DialogPanel
+          className={cn(
+            'bg-card border-border relative flex w-full max-w-lg flex-col gap-4 rounded-xl border p-6 shadow-2xl',
+            'data-closed:scale-95 data-closed:opacity-0 data-enter:duration-200 data-enter:ease-out data-leave:duration-150 data-leave:ease-in',
+            className,
+          )}
+        >
+          {children}
+        </DialogPanel>
       </div>
-    </div>
+    </HeadlessDialog>
   );
 }
 
@@ -112,7 +113,11 @@ export function DialogFooter({ children, className }: DialogFooterProps) {
 }
 
 export function DialogTitle({ children, className }: DialogTitleProps) {
-  return <h2 className={cn('text-2xl leading-none font-bold tracking-tight', className)}>{children}</h2>;
+  return (
+    <HeadlessDialogTitle as="h2" className={cn('text-2xl leading-none font-bold tracking-tight', className)}>
+      {children}
+    </HeadlessDialogTitle>
+  );
 }
 
 export function DialogDescription({ children, className }: DialogDescriptionProps) {

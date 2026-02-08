@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Listbox } from '@/components/ui/listbox';
 import toast from 'react-hot-toast';
 import Image from 'next/image';
 import type { GenderType, Person } from '@/lib/schemas';
@@ -808,24 +809,24 @@ Jane Smith,female,`;
 
           <div suppressHydrationWarning>
             <Label htmlFor="gender">Gender</Label>
-            <select
+            <Listbox
               id="gender"
               value={editingPerson.gender}
-              onChange={(e) => {
-                const value = e.target.value as GenderType;
+              onChange={(value) => {
                 setEditingPerson((prev) => {
-                  const next = prev ? { ...prev, gender: value } : null;
+                  const next = prev ? { ...prev, gender: value as GenderType } : null;
                   editingPersonRef.current = next; // Update ref synchronously
                   return next;
                 });
               }}
-              className="border-input bg-background mt-1 w-full rounded-md border px-3 py-2 text-sm"
+              options={[
+                { value: 'male', label: 'Male' },
+                { value: 'female', label: 'Female' },
+                { value: 'other', label: 'Other' },
+              ]}
               disabled={uploading}
-            >
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-            </select>
+              className="mt-1"
+            />
           </div>
 
           <div suppressHydrationWarning>

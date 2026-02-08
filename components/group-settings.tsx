@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, memo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import toast from 'react-hot-toast';
 import { getErrorMessage } from '@/lib/logger';
 import { sanitizeGroupName, validateLength } from '@/lib/security';
@@ -127,14 +128,8 @@ export const GroupSettings = memo(function GroupSettings({
           />
         </div>
 
-        <div className="flex items-center gap-2">
-          <input
-            id="enable-timer"
-            type="checkbox"
-            checked={enableTimer}
-            onChange={(e) => setEnableTimer(e.target.checked)}
-            className="text-primary focus:ring-primary size-4 cursor-pointer rounded border-gray-300 focus:ring-2 focus:ring-offset-2"
-          />
+        <div className="flex items-center gap-3">
+          <Switch id="enable-timer" checked={enableTimer} onChange={setEnableTimer} />
           <Label htmlFor="enable-timer" className="cursor-pointer text-sm leading-none font-medium">
             Enable countdown timer
           </Label>

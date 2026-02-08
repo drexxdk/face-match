@@ -1,14 +1,16 @@
 'use client';
 
-import { useEffect, memo } from 'react';
+import { useEffect, useState, memo } from 'react';
+import { useRouter } from 'next/navigation';
 import { FaPlus, FaUserGroup, FaPlay, FaGear, FaClock } from 'react-icons/fa6';
-import { buttonVariants } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
 import { LoadingLink } from '@/components/ui/loading-link';
 import { EmptyState } from '@/components/ui/empty-state';
 import { StaggeredGrid, StaggeredGridItem } from '@/components/ui/staggered-list';
 import { useLoading } from '@/lib/loading-context';
+import { GroupModal } from '@/components/group-modal';
 
 interface Group {
   id: string;
@@ -22,11 +24,18 @@ interface GroupsListProps {
 
 export const GroupsList = memo(function GroupsList({ groups }: GroupsListProps) {
   const { setLoading } = useLoading();
+  const router = useRouter();
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   // Reset loading state when page mounts
   useEffect(() => {
     setLoading(false);
   }, [setLoading]);
+
+  const handleGroupCreated = () => {
+    router.refresh();
+  };
+
   return (
     <>
       <div className="mb-8 flex items-center justify-between gap-4">
@@ -36,10 +45,10 @@ export const GroupsList = memo(function GroupsList({ groups }: GroupsListProps) 
             Create groups for your team, classroom, or event. Help people learn names and faces!
           </p>
         </div>
-        <LoadingLink href="/admin/groups/new" className={buttonVariants({ className: 'gap-2' })}>
+        <Button onClick={() => setShowCreateModal(true)} className="gap-2">
           <Icon icon={FaPlus} size="sm" />
           Create Group
-        </LoadingLink>
+        </Button>
       </div>
 
       {!groups || groups.length === 0 ? (
@@ -48,9 +57,9 @@ export const GroupsList = memo(function GroupsList({ groups }: GroupsListProps) 
           title="No groups yet"
           description="Create your first group to help people get to know each other through an icebreaker game"
           action={
-            <LoadingLink href="/admin/groups/new" className={buttonVariants({ size: 'lg' })}>
+            <Button onClick={() => setShowCreateModal(true)} size="lg">
               Create Your First Group
-            </LoadingLink>
+            </Button>
           }
         />
       ) : (
@@ -111,6 +120,8 @@ export const GroupsList = memo(function GroupsList({ groups }: GroupsListProps) 
           })}
         </StaggeredGrid>
       )}
+
+      <GroupModal open={showCreateModal} onOpenChange={setShowCreateModal} onSuccess={handleGroupCreated} />
     </>
   );
 });

@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Listbox } from '@/components/ui/listbox';
 import toast from 'react-hot-toast';
 import type { PersonInsert, GenderType, Person } from '@/lib/schemas';
 import { logError, getErrorMessage } from '@/lib/logger';
@@ -461,24 +462,22 @@ export function AddPersonForm({ groupId, people = [] }: { groupId: string; peopl
             </span>
           </Label>
           <div suppressHydrationWarning>
-            <select
+            <Listbox
               id="gender"
               value={formData.gender}
-              onChange={(e) =>
+              onChange={(value) =>
                 setFormData({
                   ...formData,
-                  gender: e.target.value as 'male' | 'female' | 'other',
+                  gender: value as GenderType,
                 })
               }
-              className="border-input bg-background focus-visible:ring-ring focus-visible:ring-offset-background flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-              required
-              aria-required="true"
+              options={[
+                { value: 'male', label: 'Male' },
+                { value: 'female', label: 'Female' },
+                { value: 'other', label: 'Other' },
+              ]}
               disabled={loading}
-            >
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-            </select>
+            />
           </div>
         </div>
 

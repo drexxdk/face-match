@@ -14,6 +14,7 @@ import {
 } from 'react-icons/fa6';
 import { PeopleList } from '@/components/people-list';
 import { PersonModal } from '@/components/person-modal';
+import { GroupModal } from '@/components/group-modal';
 import { BulkUploadPeople } from '@/components/bulk-upload-people';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
@@ -46,6 +47,7 @@ export function GroupDetailClient({
   const [updatedGroupData, setUpdatedGroupData] = useState<Group>(groupData);
   const [people, setPeople] = useState<Person[]>(initialPeople);
   const [isEditingSettings, setIsEditingSettings] = useState(false);
+  const [showEditGroupModal, setShowEditGroupModal] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [shareCode, setShareCode] = useState<string | null>(null);
   const [isGeneratingCode, setIsGeneratingCode] = useState(false);
@@ -243,7 +245,7 @@ export function GroupDetailClient({
               </div>
             </div>
             <Button
-              onClick={() => setIsEditingSettings(true)}
+              onClick={() => setShowEditGroupModal(true)}
               variant="outline"
               size="icon"
               aria-label="Edit group settings"
@@ -399,6 +401,28 @@ export function GroupDetailClient({
         groupId={groupId}
         people={people}
         editPerson={editPerson}
+      />
+
+      {/* Group Modal (Edit) */}
+      <GroupModal
+        open={showEditGroupModal}
+        onOpenChange={setShowEditGroupModal}
+        editGroup={updatedGroupData}
+        onSuccess={() => {
+          // Fetch the latest group data after update
+          const supabase = createClient();
+          supabase
+            .from('groups')
+            .select('*')
+            .eq('id', groupId)
+            .single()
+            .then(({ data }) => {
+              if (data) {
+                setUpdatedGroupData(data);
+              }
+            });
+        }}
+        peopleCount={people.length}
       />
 
       {/* Bulk Upload Modal */}

@@ -19,7 +19,7 @@ export default async function GroupsPage() {
     .select(
       `
       *,
-      people:people(count)
+      group_people(count)
     `,
     )
     .eq('creator_id', user.id)

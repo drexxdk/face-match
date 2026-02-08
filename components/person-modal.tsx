@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Listbox } from '@/components/ui/listbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import toast from 'react-hot-toast';
 import type { PersonInsert, GenderType, Person } from '@/lib/schemas';
@@ -475,24 +476,22 @@ export function PersonModal({ open, onOpenChange, groupId, people, editPerson }:
               </span>
             </Label>
             <div suppressHydrationWarning>
-              <select
+              <Listbox
                 id="gender"
                 value={formData.gender}
-                onChange={(e) =>
+                onChange={(value) =>
                   setFormData({
                     ...formData,
-                    gender: e.target.value as 'male' | 'female' | 'other',
+                    gender: value as GenderType,
                   })
                 }
-                className="border-input bg-background focus-visible:ring-ring focus-visible:ring-offset-background flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-                required
-                aria-required="true"
+                options={[
+                  { value: 'male', label: 'Male' },
+                  { value: 'female', label: 'Female' },
+                  { value: 'other', label: 'Other' },
+                ]}
                 disabled={loading}
-              >
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
-              </select>
+              />
             </div>
           </div>
 
@@ -620,8 +619,9 @@ export function PersonModal({ open, onOpenChange, groupId, people, editPerson }:
               </div>
             ) : preview ? (
               <div className="flex flex-col gap-2">
-                <div className="relative mx-auto size-40 overflow-hidden rounded-lg">
-                  <Image src={preview} alt="Preview" fill style={{ objectFit: 'cover' }} />
+                <div className="w-full overflow-hidden rounded-lg">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={preview} alt="Preview" className="h-auto w-full" />
                 </div>
                 <Button
                   type="button"
@@ -676,9 +676,6 @@ export function PersonModal({ open, onOpenChange, groupId, people, editPerson }:
           </div>
 
           <div className="flex gap-2">
-            <Button type="submit" disabled={loading || !!duplicateError} className="flex-1">
-              {loading ? 'Saving...' : isEditMode ? 'Update Person' : 'Add Person'}
-            </Button>
             <Button
               type="button"
               variant="outline"
@@ -687,6 +684,9 @@ export function PersonModal({ open, onOpenChange, groupId, people, editPerson }:
               className="flex-1"
             >
               Cancel
+            </Button>
+            <Button type="submit" disabled={loading || !!duplicateError} className="flex-1">
+              {loading ? 'Saving...' : isEditMode ? 'Update Person' : 'Add Person'}
             </Button>
           </div>
         </form>

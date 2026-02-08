@@ -5,8 +5,6 @@ import { useRouter } from 'next/navigation';
 import {
   FaPlay,
   FaUserGroup,
-  FaXmark,
-  FaArrowRight,
   FaWandMagicSparkles,
   FaUser,
   FaCheck,
@@ -20,13 +18,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
 import { use } from 'react';
-import { Badge } from '@/components/ui/badge';
 import { ErrorMessage } from '@/components/ui/error-message';
-import { generateGameCode, endGameSession } from '@/lib/game-utils';
+import { generateGameCode } from '@/lib/game-utils';
 import { useLoading } from '@/lib/loading-context';
 import type { Group, Person, GameSession, GameType } from '@/lib/schemas';
 import { logError } from '@/lib/logger';
-import { GameQRCode } from '@/components/game-qr-code';
+import { GameStartedModal } from '@/components/game-started-modal';
 
 export default function GameHostPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: groupId } = use(params);
@@ -38,6 +35,7 @@ export default function GameHostPage({ params }: { params: Promise<{ id: string 
   const [people, setPeople] = useState<Person[]>([]);
   const [gameSession, setGameSession] = useState<GameSession | null>(null);
   const [gameCode, setGameCode] = useState<string>('');
+  const [showGameStartedModal, setShowGameStartedModal] = useState(false);
   const [selectedGameType, setSelectedGameType] = useState<GameType>('guess_name');
   const [enableTimer, setEnableTimer] = useState<boolean>(true);
   const [timeLimitSeconds, setTimeLimitSeconds] = useState<number>(30);
@@ -85,17 +83,6 @@ export default function GameHostPage({ params }: { params: Promise<{ id: string 
   useEffect(() => {
     loadGroupData();
   }, [groupId, loadGroupData]);
-
-  const cancelGame = async () => {
-    if (!gameSession) return;
-
-    const supabase = createClient();
-    await endGameSession(supabase, gameSession.id);
-
-    // Reset local state
-    setGameSession(null);
-    setGameCode('');
-  };
 
   const startGame = async () => {
     if (!groupData) return;
@@ -147,8 +134,11 @@ export default function GameHostPage({ params }: { params: Promise<{ id: string 
       return;
     }
 
-    // Navigate to game started screen
-    router.push(`/admin/groups/${groupId}/host/${session.id}/started`);
+    // Set game session and show modal
+    setGameSession(session);
+    setGameCode(code);
+    setShowGameStartedModal(true);
+    setLoading(false);
   };
 
   // Show nothing until initialized (global loading overlay handles loading state)
@@ -168,35 +158,25 @@ export default function GameHostPage({ params }: { params: Promise<{ id: string 
     return <p>Group not found</p>;
   }
 
-  const initializedContent =
-    gameSession && gameCode ? (
-      <GameStartedContent
-        gameCode={gameCode}
-        gameSession={gameSession}
-        groupId={groupId}
-        cancelGame={cancelGame}
-        router={router}
-        setLoading={setLoading}
-      />
-    ) : (
-      <GameSetupContent
-        selectedGameType={selectedGameType}
-        setSelectedGameType={setSelectedGameType}
-        enableTimer={enableTimer}
-        setEnableTimer={setEnableTimer}
-        timeLimitSeconds={timeLimitSeconds}
-        setTimeLimitSeconds={setTimeLimitSeconds}
-        optionsCount={optionsCount}
-        setOptionsCount={setOptionsCount}
-        totalQuestions={totalQuestions}
-        setTotalQuestions={setTotalQuestions}
-        people={people}
-        router={router}
-        startGame={startGame}
-        groupData={groupData}
-        error={error}
-      />
-    );
+  const initializedContent = (
+    <GameSetupContent
+      selectedGameType={selectedGameType}
+      setSelectedGameType={setSelectedGameType}
+      enableTimer={enableTimer}
+      setEnableTimer={setEnableTimer}
+      timeLimitSeconds={timeLimitSeconds}
+      setTimeLimitSeconds={setTimeLimitSeconds}
+      optionsCount={optionsCount}
+      setOptionsCount={setOptionsCount}
+      totalQuestions={totalQuestions}
+      setTotalQuestions={setTotalQuestions}
+      people={people}
+      router={router}
+      startGame={startGame}
+      groupData={groupData}
+      error={error}
+    />
+  );
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
@@ -248,77 +228,24 @@ export default function GameHostPage({ params }: { params: Promise<{ id: string 
           </ul>
         </CardContent>
       </Card>
-    </div>
-  );
-}
 
-function GameStartedContent({
-  gameCode,
-  gameSession,
-  groupId,
-  cancelGame,
-  router,
-  setLoading,
-}: {
-  gameCode: string;
-  gameSession: GameSession;
-  groupId: string;
-  cancelGame: () => Promise<void>;
-  router: ReturnType<typeof useRouter>;
-  setLoading: (loading: boolean) => void;
-}) {
-  return (
-    <div className="flex flex-col gap-6 rounded-xl bg-linear-to-br from-purple-500/10 via-pink-500/10 to-blue-500/10 p-6">
-      {/* Header */}
-      <div className="text-center">
-        <div className="inline-flex items-center gap-2 rounded-full bg-green-500/10 px-4 py-2">
-          <div className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
-          <span className="text-sm font-medium text-green-600 dark:text-green-400">Live</span>
-        </div>
-        <h3 className="text-2xl font-bold">Game Started!</h3>
-        <p className="text-muted-foreground text-sm">Players can join using either method below</p>
-      </div>
-
-      {/* Code and QR Section */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Game Code */}
-        <div className="bg-background/50 flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-6">
-          <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">Game Code</p>
-          <Badge className="bg-primary hover:bg-primary px-8 py-4 font-mono text-5xl shadow-lg">{gameCode}</Badge>
-          <p className="text-muted-foreground text-center text-xs">
-            Enter at <span className="text-foreground font-mono">/game/join</span>
-          </p>
-        </div>
-
-        {/* QR Code */}
-        {gameCode && (
-          <div className="bg-background/50 flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-6">
-            <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">Or Scan QR Code</p>
-            <div className="rounded-lg bg-white p-2">
-              <GameQRCode gameCode={gameCode} />
-            </div>
-            <p className="text-muted-foreground text-center text-xs">Opens with code pre-filled</p>
-          </div>
-        )}
-      </div>
-
-      {/* Actions */}
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <Button variant="outline" onClick={cancelGame} className="flex-1 gap-2">
-          <Icon icon={FaXmark} size="sm" />
-          End Game
-        </Button>
-        <Button
-          onClick={() => {
-            setLoading(true);
-            router.push(`/admin/groups/${groupId}/host/${gameSession.id}/play`);
+      {/* Game Started Modal */}
+      {gameSession && gameCode && (
+        <GameStartedModal
+          open={showGameStartedModal}
+          onOpenChange={(open) => {
+            setShowGameStartedModal(open);
+            if (!open) {
+              // Reset game state when modal is closed
+              setGameSession(null);
+              setGameCode('');
+            }
           }}
-          className="flex-1 gap-2"
-        >
-          <Icon icon={FaArrowRight} size="sm" />
-          Go to Dashboard
-        </Button>
-      </div>
+          gameCode={gameCode}
+          sessionId={gameSession.id}
+          groupId={groupId}
+        />
+      )}
     </div>
   );
 }
