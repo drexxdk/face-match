@@ -53,7 +53,14 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'game_answers_selected_student_id_fkey';
+            foreignKeyName: 'game_answers_correct_option_id_fkey';
+            columns: ['correct_option_id'];
+            isOneToOne: false;
+            referencedRelation: 'people';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'game_answers_selected_option_id_fkey';
             columns: ['selected_option_id'];
             isOneToOne: false;
             referencedRelation: 'people';
@@ -66,18 +73,12 @@ export type Database = {
             referencedRelation: 'game_sessions';
             referencedColumns: ['id'];
           },
-          {
-            foreignKeyName: 'game_answers_student_id_fkey';
-            columns: ['correct_option_id'];
-            isOneToOne: false;
-            referencedRelation: 'people';
-            referencedColumns: ['id'];
-          },
         ];
       };
       game_sessions: {
         Row: {
           completed_at: string | null;
+          enable_timer: boolean | null;
           game_code: string | null;
           game_type: Database['public']['Enums']['game_type'];
           group_id: string;
@@ -92,6 +93,7 @@ export type Database = {
         };
         Insert: {
           completed_at?: string | null;
+          enable_timer?: boolean | null;
           game_code?: string | null;
           game_type: Database['public']['Enums']['game_type'];
           group_id: string;
@@ -106,6 +108,7 @@ export type Database = {
         };
         Update: {
           completed_at?: string | null;
+          enable_timer?: boolean | null;
           game_code?: string | null;
           game_type?: Database['public']['Enums']['game_type'];
           group_id?: string;
@@ -120,7 +123,7 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'game_sessions_class_id_fkey';
+            foreignKeyName: 'game_sessions_group_id_fkey';
             columns: ['group_id'];
             isOneToOne: false;
             referencedRelation: 'groups';
@@ -132,6 +135,7 @@ export type Database = {
         Row: {
           created_at: string | null;
           creator_id: string;
+          enable_timer: boolean | null;
           id: string;
           name: string;
           options_count: number | null;
@@ -141,6 +145,7 @@ export type Database = {
         Insert: {
           created_at?: string | null;
           creator_id: string;
+          enable_timer?: boolean | null;
           id?: string;
           name: string;
           options_count?: number | null;
@@ -150,6 +155,7 @@ export type Database = {
         Update: {
           created_at?: string | null;
           creator_id?: string;
+          enable_timer?: boolean | null;
           id?: string;
           name?: string;
           options_count?: number | null;
@@ -191,7 +197,7 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'students_class_id_fkey';
+            foreignKeyName: 'people_group_id_fkey';
             columns: ['group_id'];
             isOneToOne: false;
             referencedRelation: 'groups';
@@ -237,7 +243,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      generate_game_code: {
+        Args: Record<string, never>;
+        Returns: string;
+      };
     };
     Enums: {
       game_type: 'guess_name' | 'guess_image';
