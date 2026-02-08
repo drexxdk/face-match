@@ -111,15 +111,15 @@ export async function getGroupById(supabase: TypedSupabaseClient, groupId: strin
 export async function getUserGroupsWithCount(
   supabase: TypedSupabaseClient,
   userId: string,
-): Promise<Array<Group & { people: { count: number }[] }>> {
+): Promise<Array<Group & { group_people: { count: number }[] }>> {
   const { data } = await supabase
     .from('groups')
-    .select('*, people(count)')
+    .select('*, group_people(count)')
     .eq('creator_id', userId)
     .order('created_at', { ascending: false });
 
   // Can't use parseArrayFiltered here due to the count aggregate
-  return (data ?? []) as Array<Group & { people: { count: number }[] }>;
+  return (data ?? []) as Array<Group & { group_people: { count: number }[] }>;
 }
 
 // =============================================================================
@@ -130,7 +130,11 @@ export async function getUserGroupsWithCount(
  * Get all people in a group
  */
 export async function getPeopleByGroupId(supabase: TypedSupabaseClient, groupId: string): Promise<Person[]> {
-  const { data } = await supabase.from('people').select('*').eq('group_id', groupId).order('first_name');
+  const { data } = await supabase
+    .from('people')
+    .select('*, group_people!inner(group_id)')
+    .eq('group_people.group_id', groupId)
+    .order('first_name');
 
   return parseArrayFiltered(personSchema, data ?? []);
 }
@@ -139,7 +143,10 @@ export async function getPeopleByGroupId(supabase: TypedSupabaseClient, groupId:
  * Get people count for a group
  */
 export async function getPeopleCountByGroupId(supabase: TypedSupabaseClient, groupId: string): Promise<number> {
-  const { count } = await supabase.from('people').select('*', { count: 'exact', head: true }).eq('group_id', groupId);
+  const { count } = await supabase
+    .from('group_people')
+    .select('*', { count: 'exact', head: true })
+    .eq('group_id', groupId);
 
   return count ?? 0;
 }

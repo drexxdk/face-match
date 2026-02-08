@@ -304,8 +304,8 @@ export default function GamePlayPage() {
       // Load people from the group
       const { data: peopleData, error: peopleError } = await supabase
         .from('people')
-        .select('*')
-        .eq('group_id', session.group_id);
+        .select('*, group_people!inner(group_id)')
+        .eq('group_people.group_id', session.group_id);
 
       logger.log('People data:', peopleData, 'Error:', peopleError);
 

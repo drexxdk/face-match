@@ -115,7 +115,7 @@ export default function JoinGamePage() {
           <CardDescription>Enter the game code to join the fun!</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleJoin} className="flex flex-col gap-4">
+          <form onSubmit={handleJoin} className="flex flex-col gap-4" suppressHydrationWarning>
             <div className="flex flex-col gap-2">
               <Input
                 placeholder="Game Code"

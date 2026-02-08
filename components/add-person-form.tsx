@@ -300,6 +300,21 @@ export function AddPersonForm({ groupId }: { groupId: string }) {
 
     try {
       const supabase = createClient();
+
+      // Check if person with same name already exists in this group
+      const { data: existingPeople } = await supabase
+        .from('people')
+        .select('*, group_people!inner(group_id)')
+        .eq('group_people.group_id', groupId)
+        .ilike('first_name', firstName)
+        .ilike('last_name', lastName);
+
+      if (existingPeople && existingPeople.length > 0) {
+        toast.error(`${firstName} ${lastName} is already in this group`);
+        setLoading(false);
+        return;
+      }
+
       let imageUrl = '';
 
       // Upload image if one was selected
@@ -327,7 +342,6 @@ export function AddPersonForm({ groupId }: { groupId: string }) {
 
       // Build the person object with sanitized values
       const personData: PersonInsert = {
-        group_id: groupId,
         first_name: firstName,
         last_name: lastName,
         gender: formData.gender,
@@ -338,15 +352,33 @@ export function AddPersonForm({ groupId }: { groupId: string }) {
         personData.image_url = imageUrl;
       }
 
-      const { error } = await supabase.from('people').insert(personData);
+      // Insert the person and get their ID back
+      const { data: newPerson, error: personError } = await supabase
+        .from('people')
+        .insert(personData)
+        .select()
+        .single();
 
-      if (error) {
-        if (error.message.includes('row-level security')) {
+      if (personError) {
+        console.error('Person insert error:', personError);
+        throw new Error(`Failed to insert person: ${personError.message || JSON.stringify(personError)}`);
+      }
+
+      // Link the person to the group via junction table
+      const { error: linkError } = await supabase.from('group_people').insert({
+        group_id: groupId,
+        person_id: newPerson.id,
+      });
+
+      if (linkError) {
+        // If linking fails, we should delete the person we just created
+        await supabase.from('people').delete().eq('id', newPerson.id);
+        if (linkError.message.includes('row-level security')) {
           throw new Error(
-            'Permission denied: RLS policy prevents adding people. In Supabase: Database → Tables → people → RLS toggle OFF (or create INSERT policy).',
+            'Permission denied: RLS policy prevents linking person to group. In Supabase: Database → Tables → group_people → RLS toggle OFF (or create INSERT policy).',
           );
         }
-        throw error;
+        throw linkError;
       }
 
       // Reset form
@@ -372,80 +404,86 @@ export function AddPersonForm({ groupId }: { groupId: string }) {
 
   return (
     <>
-      <form onSubmit={handleSubmit} className="relative flex flex-col gap-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="flex flex-col gap-2">
+      <form onSubmit={handleSubmit} className="relative flex flex-col gap-4" suppressHydrationWarning>
+        <div className="grid grid-cols-2 gap-4" suppressHydrationWarning>
+          <div className="flex flex-col gap-2" suppressHydrationWarning>
             <Label htmlFor="first_name">
               First Name{' '}
               <span className="text-destructive" aria-label="required">
                 *
               </span>
             </Label>
-            <Input
-              id="first_name"
-              value={formData.first_name}
-              onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-              autoComplete="one-time-code"
-              data-1p-ignore
-              data-lpignore="true"
-              required
-              aria-required="true"
-              disabled={loading}
-            />
+            <div suppressHydrationWarning>
+              <Input
+                id="first_name"
+                value={formData.first_name}
+                onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                autoComplete="one-time-code"
+                data-1p-ignore
+                data-lpignore="true"
+                required
+                aria-required="true"
+                disabled={loading}
+              />
+            </div>
           </div>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2" suppressHydrationWarning>
             <Label htmlFor="last_name">
               Last Name{' '}
               <span className="text-destructive" aria-label="required">
                 *
               </span>
             </Label>
-            <Input
-              id="last_name"
-              value={formData.last_name}
-              onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-              autoComplete="one-time-code"
-              data-1p-ignore
-              data-lpignore="true"
-              required
-              aria-required="true"
-              disabled={loading}
-            />
+            <div suppressHydrationWarning>
+              <Input
+                id="last_name"
+                value={formData.last_name}
+                onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                autoComplete="one-time-code"
+                data-1p-ignore
+                data-lpignore="true"
+                required
+                aria-required="true"
+                disabled={loading}
+              />
+            </div>
           </div>
         </div>
 
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2" suppressHydrationWarning>
           <Label htmlFor="gender">
             Gender{' '}
             <span className="text-destructive" aria-label="required">
               *
             </span>
           </Label>
-          <select
-            id="gender"
-            value={formData.gender}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                gender: e.target.value as 'male' | 'female' | 'other',
-              })
-            }
-            className="border-input bg-background focus-visible:ring-ring focus-visible:ring-offset-background flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-            required
-            aria-required="true"
-            disabled={loading}
-          >
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="other">Other</option>
-          </select>
+          <div suppressHydrationWarning>
+            <select
+              id="gender"
+              value={formData.gender}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  gender: e.target.value as 'male' | 'female' | 'other',
+                })
+              }
+              className="border-input bg-background focus-visible:ring-ring focus-visible:ring-offset-background flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+              required
+              aria-required="true"
+              disabled={loading}
+            >
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
         </div>
 
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2" suppressHydrationWarning>
           <Label>Photo</Label>
 
           {showCropper ? (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2" suppressHydrationWarning>
               <p className="text-sm text-gray-600">Drag to move • Drag corners to resize</p>
               <div
                 ref={cropContainerRef}
@@ -580,6 +618,7 @@ export function AddPersonForm({ groupId }: { groupId: string }) {
             </div>
           ) : (
             <div
+              suppressHydrationWarning
               onDragEnter={handleDrag}
               onDragLeave={handleDrag}
               onDragOver={handleDrag}
@@ -598,12 +637,12 @@ export function AddPersonForm({ groupId }: { groupId: string }) {
                 className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
               />
               {imageLoading ? (
-                <div className="pointer-events-none flex flex-col gap-3 py-8">
+                <div className="pointer-events-none flex flex-col gap-3 py-8" suppressHydrationWarning>
                   <div className="border-t-primary border-r-primary mx-auto h-12 w-12 animate-spin rounded-full border-4 border-transparent"></div>
                   <p className="text-sm font-medium">Processing image...</p>
                 </div>
               ) : preview ? (
-                <div className="pointer-events-none flex flex-col gap-3">
+                <div className="pointer-events-none flex flex-col gap-3" suppressHydrationWarning>
                   <div className="relative mx-auto">
                     <Image src={preview} alt="Preview" width={500} height={500} className="rounded-lg object-cover" />
                   </div>
@@ -611,7 +650,7 @@ export function AddPersonForm({ groupId }: { groupId: string }) {
                   <p className="text-muted-foreground text-xs">Click or drag to replace</p>
                 </div>
               ) : (
-                <div className="flex flex-col gap-2 py-8">
+                <div className="flex flex-col gap-2 py-8" suppressHydrationWarning>
                   <p className="text-sm font-medium">Drag and drop an image here</p>
                   <p className="text-muted-foreground text-xs">or click to select from your device</p>
                 </div>
@@ -621,7 +660,7 @@ export function AddPersonForm({ groupId }: { groupId: string }) {
         </div>
 
         {!showCropper && (
-          <div className="flex gap-2">
+          <div className="flex gap-2" suppressHydrationWarning>
             <Button type="button" variant="outline" onClick={handleReset} disabled={loading} className="flex-1">
               Reset
             </Button>

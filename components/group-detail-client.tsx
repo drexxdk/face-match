@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { FaPencil, FaUserGroup, FaGear, FaPlay, FaTriangleExclamation } from 'react-icons/fa6';
+import { FaPencil, FaUserGroup, FaGear, FaPlay, FaTriangleExclamation, FaShareNodes, FaCopy } from 'react-icons/fa6';
 import { PeopleList } from '@/components/people-list';
 import { AddPersonForm } from '@/components/add-person-form';
 import { BulkUploadPeople } from '@/components/bulk-upload-people';
@@ -13,12 +13,15 @@ import { Button } from '@/components/ui/button';
 import { GroupSettings } from '@/components/group-settings';
 import { DeleteGroupButton } from '@/components/delete-group-button';
 import { DuplicateGroupButton } from '@/components/duplicate-group-button';
+import { GroupQRCode } from '@/components/group-qr-code';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { Group, Person } from '@/lib/schemas';
-import { logger } from '@/lib/logger';
+import { logger, logError } from '@/lib/logger';
 import { useMultiRealtimeSubscription, getPayloadNew, getPayloadOld } from '@/lib/hooks/use-realtime';
 import { useLoading } from '@/lib/loading-context';
 import { LoadingLink } from '@/components/ui/loading-link';
 import { createClient } from '@/lib/supabase/client';
+import toast from 'react-hot-toast';
 
 export function GroupDetailClient({
   groupData,
@@ -34,6 +37,10 @@ export function GroupDetailClient({
   const [people, setPeople] = useState<Person[]>(initialPeople);
   const [isEditingSettings, setIsEditingSettings] = useState(false);
   const [uploadMode, setUploadMode] = useState<'single' | 'bulk'>('single');
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [shareCode, setShareCode] = useState<string | null>(null);
+  const [isGeneratingCode, setIsGeneratingCode] = useState(false);
+  const [shareUrl, setShareUrl] = useState('');
 
   // Reset loading state when component mounts
   useEffect(() => {
@@ -41,26 +48,6 @@ export function GroupDetailClient({
   }, [setLoading]);
 
   // Realtime event handlers
-  const handleDelete = useCallback((payload: Parameters<typeof getPayloadOld<Person>>[0]) => {
-    const oldData = getPayloadOld<Person>(payload);
-    if (!oldData?.id) return;
-    logger.log('DELETE event received for person:', oldData.id);
-    setPeople((prev) => prev.filter((p) => p.id !== oldData.id));
-  }, []);
-
-  const handleInsert = useCallback((payload: Parameters<typeof getPayloadNew<Person>>[0]) => {
-    const newPerson = getPayloadNew<Person>(payload);
-    if (!newPerson?.id) return;
-    logger.log('INSERT event received:', newPerson);
-    setPeople((prev) => {
-      // Prevent duplicates
-      if (prev.some((p) => p.id === newPerson.id)) {
-        return prev;
-      }
-      return [...prev, newPerson].sort((a, b) => a.first_name.localeCompare(b.first_name));
-    });
-  }, []);
-
   const handleUpdate = useCallback((payload: Parameters<typeof getPayloadNew<Person>>[0]) => {
     const updatedPerson = getPayloadNew<Person>(payload);
     if (!updatedPerson?.id) return;
@@ -72,31 +59,62 @@ export function GroupDetailClient({
     );
   }, []);
 
-  // Watch for changes to people in this group
+  // Handle group_people junction table changes
+  const handleGroupPeopleInsert = useCallback(
+    async (payload: Parameters<typeof getPayloadNew<{ person_id: string }>>[0]) => {
+      const record = getPayloadNew<{ person_id: string }>(payload);
+      if (!record?.person_id) return;
+      logger.log('Person added to group:', record.person_id);
+
+      // Fetch the person details
+      const supabase = createClient();
+      const { data: person } = await supabase.from('people').select('*').eq('id', record.person_id).single();
+
+      if (person) {
+        setPeople((prev) => {
+          // Check if person already exists to prevent duplicates
+          const exists = prev.some((p) => p.id === person.id);
+          if (exists) return prev;
+          return [...prev, person].sort((a, b) => a.first_name.localeCompare(b.first_name));
+        });
+      }
+    },
+    [],
+  );
+
+  const handleGroupPeopleDelete = useCallback((payload: Parameters<typeof getPayloadOld<{ person_id: string }>>[0]) => {
+    const record = getPayloadOld<{ person_id: string }>(payload);
+    if (!record?.person_id) return;
+    logger.log('Person removed from group:', record.person_id);
+    setPeople((prev) => prev.filter((p) => p.id !== record.person_id));
+  }, []);
+
+  // Watch for changes to people in this group via junction table
   const realtimeConfig = useMemo(
     () => ({
-      channelName: `people:${groupId}`,
+      channelName: `group-people:${groupId}`,
       subscriptions: [
         {
-          table: 'people',
-          event: 'DELETE' as const,
-          onEvent: handleDelete,
-        },
-        {
-          table: 'people',
+          table: 'group_people',
           event: 'INSERT' as const,
           filter: `group_id=eq.${groupId}`,
-          onEvent: handleInsert,
+          onEvent: handleGroupPeopleInsert,
+        },
+        {
+          table: 'group_people',
+          event: 'DELETE' as const,
+          filter: `group_id=eq.${groupId}`,
+          onEvent: handleGroupPeopleDelete,
         },
         {
           table: 'people',
           event: 'UPDATE' as const,
-          filter: `group_id=eq.${groupId}`,
+          // Person updates affect all groups, so we filter locally
           onEvent: handleUpdate,
         },
       ],
     }),
-    [groupId, handleDelete, handleInsert, handleUpdate],
+    [groupId, handleGroupPeopleInsert, handleGroupPeopleDelete, handleUpdate],
   );
 
   useMultiRealtimeSubscription<Person>(realtimeConfig);
@@ -104,12 +122,23 @@ export function GroupDetailClient({
   // Refresh people list after bulk upload to ensure consistency with database
   const handleBulkUploadComplete = useCallback(async () => {
     const supabase = createClient();
-    const { data, error } = await supabase.from('people').select('*').eq('group_id', groupId).order('first_name');
+    const { data, error } = await supabase
+      .from('people')
+      .select('*, group_people!inner(group_id)')
+      .eq('group_people.group_id', groupId)
+      .order('first_name');
 
     if (!error && data) {
       setPeople(data);
     }
   }, [groupId]);
+
+  // Update share URL when share code changes (client-side only to avoid hydration issues)
+  useEffect(() => {
+    if (shareCode && typeof window !== 'undefined') {
+      setShareUrl(`${window.location.origin}/admin/groups/import?code=${shareCode}`);
+    }
+  }, [shareCode]);
 
   const hasEnoughPeople = people.length >= (updatedGroupData.options_count ?? 4);
 
@@ -118,6 +147,56 @@ export function GroupDetailClient({
       ...prev,
       ...updated,
     }));
+  };
+
+  const handleShareGroup = async () => {
+    try {
+      setIsGeneratingCode(true);
+      const supabase = createClient();
+
+      // Check if group already has a share code
+      if (updatedGroupData.share_code) {
+        setShareCode(updatedGroupData.share_code);
+        setShowShareDialog(true);
+        return;
+      }
+
+      // Generate new share code
+      const { data, error } = await supabase.rpc('generate_group_share_code', {
+        group_id_param: groupId,
+      });
+
+      if (error) {
+        logError('Failed to generate share code', { error });
+        toast.error('Failed to generate share code');
+        return;
+      }
+
+      setShareCode(data);
+      setUpdatedGroupData((prev) => ({ ...prev, share_code: data }));
+      setShowShareDialog(true);
+      toast.success('Share code generated!');
+    } catch (error) {
+      logError('Error generating share code', { error });
+      toast.error('An unexpected error occurred');
+    } finally {
+      setIsGeneratingCode(false);
+    }
+  };
+
+  const copyShareCode = () => {
+    if (shareCode) {
+      navigator.clipboard.writeText(shareCode);
+      toast.success('Share code copied!');
+    }
+  };
+
+  const copyShareUrl = () => {
+    if (shareCode) {
+      const url = `${window.location.origin}/admin/groups/import?code=${shareCode}`;
+      navigator.clipboard.writeText(url);
+      toast.success('Share link copied!');
+    }
   };
 
   return (
@@ -204,6 +283,10 @@ export function GroupDetailClient({
                   </p>
                 </div>
               )}
+              <Button onClick={handleShareGroup} variant="outline" className="w-full gap-2" disabled={isGeneratingCode}>
+                <Icon icon={FaShareNodes} size="md" />
+                {isGeneratingCode ? 'Generating...' : 'Share Group'}
+              </Button>
               <DuplicateGroupButton groupId={groupId} />
               <DeleteGroupButton groupId={groupId} />
             </CardContent>
@@ -211,7 +294,7 @@ export function GroupDetailClient({
 
           {/* Add Person */}
           <SectionCard title="Add Person" description="Add new people to this group">
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4" suppressHydrationWarning>
               <div className="flex gap-2">
                 <Button
                   variant={uploadMode === 'single' ? 'default' : 'outline'}
@@ -228,11 +311,13 @@ export function GroupDetailClient({
                   Bulk Upload (CSV)
                 </Button>
               </div>
-              {uploadMode === 'single' ? (
-                <AddPersonForm groupId={groupId} />
-              ) : (
-                <BulkUploadPeople groupId={groupId} onComplete={handleBulkUploadComplete} />
-              )}
+              <div suppressHydrationWarning>
+                {uploadMode === 'single' ? (
+                  <AddPersonForm groupId={groupId} />
+                ) : (
+                  <BulkUploadPeople groupId={groupId} onComplete={handleBulkUploadComplete} />
+                )}
+              </div>
             </div>
           </SectionCard>
         </div>
@@ -243,6 +328,58 @@ export function GroupDetailClient({
           </SectionCard>
         </div>
       </div>
+
+      {/* Share Dialog */}
+      <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Share Group</DialogTitle>
+            <DialogDescription>
+              Share this group with others using a code or QR code. They&apos;ll need to login to import it.
+            </DialogDescription>
+          </DialogHeader>
+          {shareCode && (
+            <div className="space-y-4">
+              {/* Share Code */}
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium">Share Code</label>
+                <div className="flex gap-2">
+                  <div className="bg-muted flex-1 rounded-lg px-4 py-3 text-center font-mono text-2xl font-bold tracking-wider">
+                    {shareCode}
+                  </div>
+                  <Button onClick={copyShareCode} variant="outline" size="icon" className="shrink-0">
+                    <Icon icon={FaCopy} size="md" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* QR Code */}
+              <div className="flex flex-col items-center gap-2">
+                <label className="text-sm font-medium">QR Code</label>
+                <div className="rounded-lg border bg-white p-4">
+                  <GroupQRCode shareCode={shareCode} />
+                </div>
+              </div>
+
+              {/* Share URL */}
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium">Share Link</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={shareUrl}
+                    readOnly
+                    className="bg-muted flex-1 rounded-lg px-3 py-2 text-sm"
+                  />
+                  <Button onClick={copyShareUrl} variant="outline" size="icon" className="shrink-0">
+                    <Icon icon={FaCopy} size="md" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

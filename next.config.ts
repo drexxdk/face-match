@@ -11,7 +11,7 @@ const ContentSecurityPolicy = `
   default-src 'self';
   script-src 'self' 'unsafe-eval' 'unsafe-inline';
   style-src 'self' 'unsafe-inline';
-  img-src 'self' blob: data: https://*.supabase.co https://i.pravatar.cc https://picsum.photos https://fastly.picsum.photos;
+  img-src 'self' blob: data: https://*.supabase.co https://i.pravatar.cc https://picsum.photos https://i.picsum.photos https://fastly.picsum.photos;
   font-src 'self';
   connect-src 'self' https://*.supabase.co wss://*.supabase.co;
   frame-ancestors 'none';
@@ -82,6 +82,10 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'picsum.photos',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.picsum.photos',
       },
       {
         protocol: 'https',

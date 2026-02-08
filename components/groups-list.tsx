@@ -13,7 +13,7 @@ import { useLoading } from '@/lib/loading-context';
 interface Group {
   id: string;
   name: string;
-  people?: { count: number }[];
+  group_people?: { count: number }[];
 }
 
 interface GroupsListProps {
@@ -56,7 +56,7 @@ export const GroupsList = memo(function GroupsList({ groups }: GroupsListProps) 
       ) : (
         <StaggeredGrid className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {groups.map((group) => {
-            const peopleCount = group.people?.at(0)?.count ?? 0;
+            const peopleCount = group.group_people?.at(0)?.count ?? 0;
             return (
               <StaggeredGridItem key={group.id}>
                 <Card variant="flush" hover className="group flex h-full flex-col overflow-hidden">

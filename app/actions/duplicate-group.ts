@@ -55,28 +55,28 @@ export async function duplicateGroup(
       return { success: false, error: getErrorMessage(createError) };
     }
 
-    // Get all people from the original group
-    const { data: people, error: peopleError } = await supabase.from('people').select('*').eq('group_id', groupId);
+    // Get all people from the original group via junction table
+    const { data: groupPeople, error: peopleError } = await supabase
+      .from('group_people')
+      .select('person_id')
+      .eq('group_id', groupId);
 
     if (peopleError) {
       logError('Failed to fetch people for duplication', peopleError);
     }
 
-    // If there are people, copy them to the new group
-    if (people && people.length > 0) {
-      const newPeople = people.map((person) => ({
+    // If there are people, link them to the new group (shares references, no duplication)
+    if (groupPeople && groupPeople.length > 0) {
+      const newGroupPeople = groupPeople.map((gp) => ({
         group_id: newGroup.id,
-        first_name: person.first_name,
-        last_name: person.last_name,
-        gender: person.gender,
-        image_url: person.image_url,
+        person_id: gp.person_id,
       }));
 
-      const { error: insertPeopleError } = await supabase.from('people').insert(newPeople);
+      const { error: linkError } = await supabase.from('group_people').insert(newGroupPeople);
 
-      if (insertPeopleError) {
-        logError('Failed to copy people to new group', insertPeopleError);
-        // Don't fail the whole operation if people copy fails
+      if (linkError) {
+        logError('Failed to link people to new group', linkError);
+        // Don't fail the whole operation if linking fails
       }
     }
 

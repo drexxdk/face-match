@@ -80,12 +80,12 @@ export default function NewGroupPage() {
       <CardHeader>
         <CardTitle>Create New Group</CardTitle>
         <CardDescription>
-          Set up a new group of people for your Face Match game. Perfect for helping new team members, students, or event
-          attendees get to know each other!
+          Set up a new group of people for your Face Match game. Perfect for helping new team members, students, or
+          event attendees get to know each other!
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-6">
-        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6" suppressHydrationWarning>
           <div className="flex flex-col gap-2">
             <Label htmlFor="name">Group Name</Label>
             <Input

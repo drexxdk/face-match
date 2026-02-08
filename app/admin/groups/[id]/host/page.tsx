@@ -60,8 +60,8 @@ export default function GameHostPage({ params }: { params: Promise<{ id: string 
       // Get people
       const { data: peopleData, error: peopleError } = await supabase
         .from('people')
-        .select('*')
-        .eq('group_id', groupId);
+        .select('*, group_people!inner(group_id)')
+        .eq('group_people.group_id', groupId);
 
       if (peopleError) throw peopleError;
 

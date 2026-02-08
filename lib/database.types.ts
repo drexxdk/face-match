@@ -139,6 +139,7 @@ export type Database = {
           id: string;
           name: string;
           options_count: number | null;
+          share_code: string | null;
           time_limit_seconds: number | null;
           updated_at: string | null;
         };
@@ -149,6 +150,7 @@ export type Database = {
           id?: string;
           name: string;
           options_count?: number | null;
+          share_code?: string | null;
           time_limit_seconds?: number | null;
           updated_at?: string | null;
         };
@@ -159,17 +161,53 @@ export type Database = {
           id?: string;
           name?: string;
           options_count?: number | null;
+          share_code?: string | null;
           time_limit_seconds?: number | null;
           updated_at?: string | null;
         };
         Relationships: [];
+      };
+      group_people: {
+        Row: {
+          created_at: string | null;
+          group_id: string;
+          id: string;
+          person_id: string;
+        };
+        Insert: {
+          created_at?: string | null;
+          group_id: string;
+          id?: string;
+          person_id: string;
+        };
+        Update: {
+          created_at?: string | null;
+          group_id?: string;
+          id?: string;
+          person_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'group_people_group_id_fkey';
+            columns: ['group_id'];
+            isOneToOne: false;
+            referencedRelation: 'groups';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'group_people_person_id_fkey';
+            columns: ['person_id'];
+            isOneToOne: false;
+            referencedRelation: 'people';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       people: {
         Row: {
           created_at: string | null;
           first_name: string;
           gender: Database['public']['Enums']['gender_type'];
-          group_id: string;
           id: string;
           image_url: string | null;
           last_name: string;
@@ -179,7 +217,6 @@ export type Database = {
           created_at?: string | null;
           first_name: string;
           gender: Database['public']['Enums']['gender_type'];
-          group_id: string;
           id?: string;
           image_url?: string | null;
           last_name: string;
@@ -189,21 +226,12 @@ export type Database = {
           created_at?: string | null;
           first_name?: string;
           gender?: Database['public']['Enums']['gender_type'];
-          group_id?: string;
           id?: string;
           image_url?: string | null;
           last_name?: string;
           updated_at?: string | null;
         };
-        Relationships: [
-          {
-            foreignKeyName: 'people_group_id_fkey';
-            columns: ['group_id'];
-            isOneToOne: false;
-            referencedRelation: 'groups';
-            referencedColumns: ['id'];
-          },
-        ];
+        Relationships: [];
       };
       profiles: {
         Row: {
@@ -245,6 +273,12 @@ export type Database = {
     Functions: {
       generate_game_code: {
         Args: Record<string, never>;
+        Returns: string;
+      };
+      generate_group_share_code: {
+        Args: {
+          group_id_param: string;
+        };
         Returns: string;
       };
     };

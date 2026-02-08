@@ -18,32 +18,65 @@ export function DeleteGroupButton({ groupId }: { groupId: string }) {
     try {
       const supabase = createClient();
 
-      // Get all people in this group to delete their images
-      const { data: people } = await supabase.from('people').select('image_url').eq('group_id', groupId);
+      // Get all people in this group through the junction table
+      const { data: groupPeople } = await supabase
+        .from('group_people')
+        .select('person_id, people(image_url)')
+        .eq('group_id', groupId);
 
-      // Delete all images from storage
-      if (people && people.length > 0) {
-        for (const person of people) {
-          if (person.image_url) {
-            try {
-              const urlParts = person.image_url.split('/person-images/');
+      // For each person, check if they're in other groups
+      const peopleToDelete: string[] = [];
+      const imagesToDelete: string[] = [];
+
+      if (groupPeople && groupPeople.length > 0) {
+        for (const gp of groupPeople) {
+          // Check if this person is in any other groups
+          const { data: otherGroups, error } = await supabase
+            .from('group_people')
+            .select('id')
+            .eq('person_id', gp.person_id)
+            .neq('group_id', groupId)
+            .limit(1);
+
+          if (error) {
+            logError('Error checking other groups:', error);
+            continue;
+          }
+
+          // If person is not in any other groups, mark for deletion
+          if (!otherGroups || otherGroups.length === 0) {
+            peopleToDelete.push(gp.person_id);
+            const personData = gp.people as { image_url?: string } | null;
+            if (personData?.image_url) {
+              const urlParts = personData.image_url.split('/person-images/');
               if (urlParts.length > 1) {
-                const filename = decodeURIComponent(urlParts[1]);
-                await supabase.storage.from('person-images').remove([filename]);
+                imagesToDelete.push(decodeURIComponent(urlParts[1]));
               }
-            } catch (err) {
-              logError('Failed to delete image:', err);
-              // Continue with deletion even if image deletion fails
             }
           }
         }
       }
 
+      // Delete images for people not in other groups
+      if (imagesToDelete.length > 0) {
+        try {
+          await supabase.storage.from('person-images').remove(imagesToDelete);
+        } catch (err) {
+          logError('Failed to delete images:', err);
+          // Continue with deletion even if image deletion fails
+        }
+      }
+
+      // Delete junction table records for this group
+      await supabase.from('group_people').delete().eq('group_id', groupId);
+
+      // Delete people not in other groups
+      if (peopleToDelete.length > 0) {
+        await supabase.from('people').delete().in('id', peopleToDelete);
+      }
+
       // Delete all active game sessions for this group
       await supabase.from('game_sessions').delete().eq('group_id', groupId);
-
-      // Delete all people in this group
-      await supabase.from('people').delete().eq('group_id', groupId);
 
       // Delete the group itself
       const { error } = await supabase.from('groups').delete().eq('id', groupId);

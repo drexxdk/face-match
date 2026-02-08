@@ -48,6 +48,7 @@ export const groupSchema = z.object({
   time_limit_seconds: z.number().nullable(),
   options_count: z.number().nullable(),
   enable_timer: z.boolean().nullable(),
+  share_code: z.string().nullable(),
   created_at: z.string().nullable(),
   updated_at: z.string().nullable(),
 });
@@ -57,6 +58,7 @@ export const groupInsertSchema = groupSchema.omit({ id: true }).extend({
   time_limit_seconds: z.number().optional().nullable(),
   options_count: z.number().optional().nullable(),
   enable_timer: z.boolean().optional().nullable(),
+  share_code: z.string().optional().nullable(),
   created_at: z.string().optional().nullable(),
   updated_at: z.string().optional().nullable(),
 });
@@ -67,7 +69,6 @@ export type GroupInsert = z.infer<typeof groupInsertSchema>;
 // People
 export const personSchema = z.object({
   id: z.string().uuid(),
-  group_id: z.string().uuid(),
   first_name: z.string().min(1),
   last_name: z.string().min(1),
   gender: genderTypeSchema,
@@ -85,6 +86,22 @@ export const personInsertSchema = personSchema.omit({ id: true }).extend({
 
 export type Person = z.infer<typeof personSchema>;
 export type PersonInsert = z.infer<typeof personInsertSchema>;
+
+// Group-People Junction
+export const groupPeopleSchema = z.object({
+  id: z.string().uuid(),
+  group_id: z.string().uuid(),
+  person_id: z.string().uuid(),
+  created_at: z.string().nullable(),
+});
+
+export const groupPeopleInsertSchema = groupPeopleSchema.omit({ id: true }).extend({
+  id: z.string().uuid().optional(),
+  created_at: z.string().optional().nullable(),
+});
+
+export type GroupPeople = z.infer<typeof groupPeopleSchema>;
+export type GroupPeopleInsert = z.infer<typeof groupPeopleInsertSchema>;
 
 // Profiles
 export const profileSchema = z.object({

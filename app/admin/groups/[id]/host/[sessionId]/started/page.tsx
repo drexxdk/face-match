@@ -2,17 +2,18 @@
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { use } from 'react';
-import { FaXmark, FaArrowRight } from 'react-icons/fa6';
+import { FaXmark, FaArrowRight, FaCopy } from 'react-icons/fa6';
 import { createClient } from '@/lib/supabase/client';
 import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Icon } from '@/components/ui/icon';
 import { endGameSession } from '@/lib/game-utils';
 import { getGameSessionWithGroup } from '@/lib/queries';
 import { useLoading } from '@/lib/loading-context';
 import { LoadingLink } from '@/components/ui/loading-link';
 import { GameQRCode } from '@/components/game-qr-code';
+import toast from 'react-hot-toast';
 
 export default function GameStartedPage({
   params: paramsPromise,
@@ -26,6 +27,7 @@ export default function GameStartedPage({
   const { setLoading } = useLoading();
   const [gameSession, setGameSession] = useState<Awaited<ReturnType<typeof getGameSessionWithGroup>> | null>(null);
   const [initialized, setInitialized] = useState(false);
+  const [gameUrl, setGameUrl] = useState('');
 
   const loadGameSession = useCallback(async () => {
     const supabase = createClient();
@@ -38,6 +40,27 @@ export default function GameStartedPage({
   useEffect(() => {
     loadGameSession();
   }, [loadGameSession]);
+
+  // Update game URL when game session loads (client-side only to avoid hydration issues)
+  useEffect(() => {
+    if (gameSession?.game_code && typeof window !== 'undefined') {
+      setGameUrl(`${window.location.origin}/game/join?code=${gameSession.game_code}`);
+    }
+  }, [gameSession?.game_code]);
+
+  const copyGameCode = () => {
+    if (gameSession?.game_code) {
+      navigator.clipboard.writeText(gameSession.game_code);
+      toast.success('Game code copied!');
+    }
+  };
+
+  const copyGameUrl = () => {
+    if (gameUrl) {
+      navigator.clipboard.writeText(gameUrl);
+      toast.success('Game link copied!');
+    }
+  };
 
   async function cancelGame() {
     if (!gameSession) return;
@@ -74,13 +97,18 @@ export default function GameStartedPage({
           </div>
 
           {/* Code and QR Section */}
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="space-y-4">
             {/* Game Code */}
-            <div className="bg-background/50 flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-6">
-              <p className="text-muted-foreground mb-3 text-xs font-medium tracking-wide uppercase">Game Code</p>
-              <Badge className="bg-primary hover:bg-primary mb-4 px-8 py-4 font-mono text-5xl shadow-lg">
-                {gameSession.game_code}
-              </Badge>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium">Game Code</label>
+              <div className="flex gap-2">
+                <div className="bg-muted flex-1 rounded-lg px-4 py-3 text-center font-mono text-2xl font-bold tracking-wider">
+                  {gameSession.game_code}
+                </div>
+                <Button onClick={copyGameCode} variant="outline" size="icon" className="shrink-0">
+                  <Icon icon={FaCopy} size="md" />
+                </Button>
+              </div>
               <p className="text-muted-foreground text-center text-xs">
                 Enter at <span className="text-foreground font-mono">/game/join</span>
               </p>
@@ -88,14 +116,25 @@ export default function GameStartedPage({
 
             {/* QR Code */}
             {gameSession.game_code && (
-              <div className="bg-background/50 flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-6">
-                <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">Or Scan QR Code</p>
-                <div className="rounded-lg bg-white p-2">
+              <div className="flex flex-col items-center gap-2">
+                <label className="text-sm font-medium">QR Code</label>
+                <div className="rounded-lg border bg-white p-4">
                   <GameQRCode gameCode={gameSession.game_code} />
                 </div>
                 <p className="text-muted-foreground text-center text-xs">Opens with code pre-filled</p>
               </div>
             )}
+
+            {/* Share URL */}
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium">Share Link</label>
+              <div className="flex gap-2">
+                <input type="text" value={gameUrl} readOnly className="bg-muted flex-1 rounded-lg px-3 py-2 text-sm" />
+                <Button onClick={copyGameUrl} variant="outline" size="icon" className="shrink-0">
+                  <Icon icon={FaCopy} size="md" />
+                </Button>
+              </div>
+            </div>
           </div>
 
           {/* Actions */}

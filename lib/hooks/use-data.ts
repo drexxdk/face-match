@@ -60,8 +60,8 @@ async function fetchPeopleByGroup(groupId: string): Promise<Person[]> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from('people')
-    .select('*')
-    .eq('group_id', groupId)
+    .select('*, group_people!inner(group_id)')
+    .eq('group_people.group_id', groupId)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
