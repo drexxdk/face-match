@@ -34,7 +34,7 @@ export function Logo({ className, showText = true, href = '/' }: LogoProps) {
       {/* Logo Text */}
       {showText && (
         <div className="flex flex-col leading-none">
-          <span className="text-gradient-primary text-xl font-extrabold">Guess Who</span>
+          <span className="text-gradient-primary text-xl font-extrabold">Face Match</span>
           <span className="text-muted-foreground text-xs font-medium tracking-wider">GAME</span>
         </div>
       )}

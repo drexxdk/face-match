@@ -38,7 +38,7 @@ export default async function Home() {
 
           {/* Headline */}
           <div className="flex flex-col gap-3 md:gap-4">
-            <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl md:text-7xl">Guess Who?</h1>
+            <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl md:text-7xl">Face Match</h1>
             <p className="max-w-2xl px-4 text-xl font-semibold text-white/95 sm:text-2xl md:text-3xl">
               Turn awkward introductions into fun connections
             </p>
@@ -121,7 +121,7 @@ export default async function Home() {
         <div className="container mx-auto max-w-6xl">
           <div className="mb-12 text-center md:mb-16">
             <div className="flex flex-col gap-3 md:gap-4">
-              <h2 className="text-gradient-primary text-3xl font-bold sm:text-4xl md:text-5xl">Why Guess Who?</h2>
+              <h2 className="text-gradient-primary text-3xl font-bold sm:text-4xl md:text-5xl">Why Face Match?</h2>
               <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
                 The easiest way to help everyone remember names and faces in any group setting
               </p>
@@ -203,7 +203,7 @@ export default async function Home() {
       {/* Footer */}
       <footer className="border-border bg-card border-t px-4 py-8">
         <div className="text-muted-foreground container mx-auto flex max-w-6xl flex-col gap-2 text-center">
-          <p>© 2026 Guess Who Game. All rights reserved.</p>
+          <p>© 2026 Face Match Game. All rights reserved.</p>
           <p className="text-sm">Built with Next.js, Supabase, and Tailwind CSS</p>
         </div>
       </footer>

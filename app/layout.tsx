@@ -13,19 +13,19 @@ const defaultUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` 
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: 'Guess Who - Social Learning Game',
+  title: 'Face Match - Social Learning Game',
   description: 'An icebreaker game that helps people learn names and faces in groups, teams, and classrooms',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Guess Who',
+    title: 'Face Match',
   },
   formatDetection: {
     telephone: false,
   },
   openGraph: {
-    title: 'Guess Who - Social Learning Game',
+    title: 'Face Match - Social Learning Game',
     description: 'An icebreaker game that helps people learn names and faces in groups, teams, and classrooms',
     type: 'website',
   },

@@ -43,7 +43,7 @@ export const AdminPageClient = memo(function AdminPageClient({ activeSessions }:
           <div className="flex grow flex-col gap-4">
             <div>
               <h1 className="from-primary mb-2 bg-linear-to-r to-purple-600 bg-clip-text text-4xl font-bold text-transparent">
-                Welcome to Guess Who!
+                Welcome to Face Match!
               </h1>
               <p className="text-muted-foreground text-lg">
                 A social icebreaker game that helps people learn about each other. Create groups for your team,

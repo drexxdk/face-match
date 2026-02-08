@@ -1,4 +1,4 @@
-const CACHE_NAME = "guess-who-v1";
+const CACHE_NAME = "face-match-v1";
 const OFFLINE_URL = "/offline";
 
 // Assets to cache immediately on install

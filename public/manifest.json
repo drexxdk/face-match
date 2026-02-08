@@ -1,6 +1,6 @@
 {
-  "name": "Guess Who",
-  "short_name": "Guess Who",
+  "name": "Face Match",
+  "short_name": "Face Match",
   "description": "An icebreaker game to help people learn names and faces",
   "start_url": "/",
   "display": "standalone",

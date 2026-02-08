@@ -1,4 +1,4 @@
-<h1 align="center">Guess Who - Social Learning Game</h1>
+<h1 align="center">Face Match - Social Learning Game</h1>
 
 <p align="center">
  A simple, non-competitive learning game designed to help people get to know each other
@@ -15,7 +15,7 @@
 
 ## About
 
-**Guess Who** is an icebreaker game that helps people learn about each other in a fun, engaging way. Unlike competitive games, this is purely a social learning tool focused on building connections and familiarity within groups.
+**Face Match** is an icebreaker game that helps people learn about each other in a fun, engaging way. Unlike competitive games, this is purely a social learning tool focused on building connections and familiarity within groups.
 
 ### Core Philosophy
 
@@ -79,7 +79,7 @@ Perfect scenarios for this game include:
 
    ```bash
    git clone <repository-url>
-   cd guess-who-v2
+   cd face-match
    ```
 
 2. **Install dependencies**
@@ -177,7 +177,7 @@ The app requires several database tables. You'll need to run migrations in your 
 ## Project Structure
 
 ```
-guess-who-v2/
+face-match/
 ├── app/                    # Next.js app directory
 │   ├── auth/              # Authentication pages
 │   ├── game/              # Game flow pages

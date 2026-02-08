@@ -85,7 +85,7 @@ export function InstallPrompt() {
       <div className="flex items-start gap-3">
         <div className="text-2xl">🎮</div>
         <div className="flex-1">
-          <h3 className="text-foreground font-semibold">Install Guess Who</h3>
+          <h3 className="text-foreground font-semibold">Install Face Match</h3>
           <p className="text-muted-foreground mt-1 text-sm">
             Add to your home screen for quick access and offline play!
           </p>
