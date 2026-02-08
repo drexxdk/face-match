@@ -71,28 +71,35 @@ export function StaggeredItem({ children, className }: StaggeredItemProps) {
 
 // Grid variant with scale effect
 export function StaggeredGrid({ children, className }: Omit<StaggeredListProps, 'staggerDelay'>) {
-  return <div className={className}>{children}</div>;
+  return (
+    <motion.div
+      className={className}
+      initial="hidden"
+      animate="visible"
+      variants={{
+        visible: {
+          transition: {
+            staggerChildren: 0.05,
+          },
+        },
+      }}
+    >
+      {children}
+    </motion.div>
+  );
 }
 
 export function StaggeredGridItem({ children, className }: StaggeredItemProps) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return <div className={className}>{children}</div>;
-  }
-
   return (
     <motion.div
       layout
       className={className}
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
+      variants={{
+        hidden: { opacity: 0, scale: 0.95 },
+        visible: { opacity: 1, scale: 1 },
+      }}
       exit={{ opacity: 0, scale: 0.8 }}
-      transition={{ duration: 0.3, ease: 'easeOut' }}
+      transition={{ duration: 0.2, ease: 'easeOut' }}
     >
       {children}
     </motion.div>

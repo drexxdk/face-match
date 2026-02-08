@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { FaTrash } from 'react-icons/fa6';
 import { Button } from '@/components/ui/button';
+import { Icon } from '@/components/ui/icon';
 import { ConfirmDialog } from '@/components/ui/dialog';
 import toast from 'react-hot-toast';
 import { createClient } from '@/lib/supabase/client';
@@ -101,8 +103,9 @@ export function DeleteGroupButton({ groupId }: { groupId: string }) {
         disabled={deleting}
         loading={deleting}
         loadingText="Deleting..."
-        className="w-full"
+        className="w-full gap-2"
       >
+        <Icon icon={FaTrash} size="sm" />
         Delete Group
       </Button>
       <ConfirmDialog

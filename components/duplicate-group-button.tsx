@@ -34,10 +34,10 @@ export function DuplicateGroupButton({ groupId }: { groupId: string }) {
       onClick={handleDuplicate}
       loading={loading}
       loadingText="Duplicating..."
-      className="w-full gap-2"
+      className="gap-2"
     >
-      <Icon icon={FaCopy} size="md" />
-      Duplicate Group
+      <Icon icon={FaCopy} size="sm" />
+      Duplicate
     </Button>
   );
 }

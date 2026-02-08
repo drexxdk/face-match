@@ -26,6 +26,7 @@ import { DeleteGroupButton } from '@/components/delete-group-button';
 import { DuplicateGroupButton } from '@/components/duplicate-group-button';
 import { GroupQRCode } from '@/components/group-qr-code';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Divider } from '@/components/ui/divider';
 import type { Group, Person } from '@/lib/schemas';
 import { logger, logError } from '@/lib/logger';
 import { useMultiRealtimeSubscription, getPayloadNew, getPayloadOld } from '@/lib/hooks/use-realtime';
@@ -157,6 +158,11 @@ export function GroupDetailClient({
     setShowPersonModal(true);
   };
 
+  const handleDeleteSuccess = (personId: string) => {
+    // Immediately remove person from state
+    setPeople((prev) => prev.filter((p) => p.id !== personId));
+  };
+
   // Update share URL when share code changes (client-side only to avoid hydration issues)
   useEffect(() => {
     if (shareCode && typeof window !== 'undefined') {
@@ -280,64 +286,77 @@ export function GroupDetailClient({
             </CardContent>
           </Card>
 
-          {/* Actions */}
+          {/* Quick Actions */}
           <Card variant="compact">
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Icon icon={FaPlay} size="md" color="primary" />
-                <CardTitle>Actions</CardTitle>
+                <CardTitle>Quick Actions</CardTitle>
               </div>
-              <CardDescription>Start a game or manage this group</CardDescription>
+              <CardDescription>Manage your group and get started</CardDescription>
             </CardHeader>
-            <CardContent className="flex flex-col gap-3">
-              <LoadingLink
-                href={`/admin/groups/${updatedGroupData.id}/host`}
-                className={buttonVariants({
-                  className: `w-full gap-2 ${!hasEnoughPeople ? 'pointer-events-none opacity-50' : ''}`,
-                })}
-              >
-                <Icon icon={FaPlay} size="md" />
-                Start Game
-              </LoadingLink>
-              {!hasEnoughPeople && (
-                <div className="bg-destructive/10 border-destructive/20 flex items-start gap-2 rounded-lg border p-3">
-                  <Icon icon={FaTriangleExclamation} size="md" color="error" className="shrink-0" />
-                  <p className="text-destructive text-sm">
-                    You need at least {updatedGroupData.options_count} people to start a game
-                  </p>
-                </div>
-              )}
-              <Button onClick={handleShareGroup} variant="outline" className="w-full gap-2" disabled={isGeneratingCode}>
-                <Icon icon={FaShareNodes} size="md" />
-                {isGeneratingCode ? 'Generating...' : 'Share Group'}
-              </Button>
-              <DuplicateGroupButton groupId={groupId} />
-              <DeleteGroupButton groupId={groupId} />
-            </CardContent>
-          </Card>
+            <CardContent className="flex flex-col gap-4">
+              {/* Start Game - Primary Action */}
+              <div>
+                <LoadingLink
+                  href={`/admin/groups/${updatedGroupData.id}/host`}
+                  className={buttonVariants({
+                    size: 'lg',
+                    className: `w-full gap-2 ${!hasEnoughPeople ? 'pointer-events-none opacity-50' : ''}`,
+                  })}
+                >
+                  <Icon icon={FaPlay} size="md" />
+                  Start Game
+                </LoadingLink>
+                {!hasEnoughPeople && (
+                  <div className="bg-destructive/10 border-destructive/20 mt-2 flex items-start gap-2 rounded-lg border p-3">
+                    <Icon icon={FaTriangleExclamation} size="sm" color="error" className="mt-0.5 shrink-0" />
+                    <p className="text-destructive text-xs">
+                      You need at least {updatedGroupData.options_count} people to start a game
+                    </p>
+                  </div>
+                )}
+              </div>
 
-          {/* Add Person Actions */}
-          <Card variant="compact">
-            <CardHeader>
-              <CardTitle>Add People</CardTitle>
-              <CardDescription>Add people to this group individually or in bulk</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-2">
-              <Button onClick={handleAddPersonClick} className="w-full gap-2">
-                <Icon icon={FaPlus} size="md" />
-                Add Person
-              </Button>
-              <Button onClick={() => setShowBulkUpload(true)} variant="outline" className="w-full gap-2">
-                <Icon icon={FaFileArrowUp} size="md" />
-                Bulk Upload (CSV)
-              </Button>
+              <Divider text="People" />
+
+              {/* People Actions */}
+              <div className="grid grid-cols-2 gap-2">
+                <Button onClick={handleAddPersonClick} variant="default" className="gap-2">
+                  <Icon icon={FaPlus} size="sm" />
+                  Add Person
+                </Button>
+                <Button onClick={() => setShowBulkUpload(true)} variant="outline" className="gap-2">
+                  <Icon icon={FaFileArrowUp} size="sm" />
+                  Bulk Upload
+                </Button>
+              </div>
+
+              <Divider text="Manage" />
+
+              {/* Group Management Actions */}
+              <div className="flex flex-col gap-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <Button onClick={handleShareGroup} variant="outline" className="gap-2" disabled={isGeneratingCode}>
+                    <Icon icon={FaShareNodes} size="sm" />
+                    {isGeneratingCode ? 'Loading...' : 'Share'}
+                  </Button>
+                  <DuplicateGroupButton groupId={groupId} />
+                </div>
+                <DeleteGroupButton groupId={groupId} />
+              </div>
             </CardContent>
           </Card>
         </div>
 
         <div>
           <SectionCard title="People" description="Manage people in this group">
-            <PeopleList people={people} onEditClick={handleEditPersonClick} />
+            <PeopleList
+              people={people}
+              onEditClick={handleEditPersonClick}
+              groupId={groupId}
+              onDeleteSuccess={handleDeleteSuccess}
+            />
           </SectionCard>
         </div>
       </div>

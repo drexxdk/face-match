@@ -19,8 +19,7 @@ export function useNameValidation({ people, currentName, excludePersonId }: UseN
 
     // Find duplicate, excluding the current person if in edit mode
     const duplicate = people.find(
-      (person) =>
-        person.name.toLowerCase() === trimmedName.toLowerCase() && (!excludePersonId || person.id !== excludePersonId),
+      (person) => person.name.toLowerCase() === trimmedName.toLowerCase() && person.id !== excludePersonId,
     );
 
     if (duplicate) {

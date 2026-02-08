@@ -61,18 +61,26 @@ export function AvatarImage({ src, alt, className, fallbackName }: AvatarImagePr
 
   return (
     <div className={cn('bg-muted relative overflow-hidden', className)}>
-      {/* Blur placeholder */}
-      {!imageLoaded && <div className={cn('absolute inset-0 animate-pulse bg-linear-to-br', gradientColors)} />}
+      {/* Blur placeholder - only shown briefly while image loads */}
+      {!imageLoaded && (
+        <div className={cn('absolute inset-0 bg-linear-to-br', gradientColors)}>
+          <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white/80">
+            {initials}
+          </div>
+        </div>
+      )}
 
       {/* Actual image */}
       <Image
         src={src}
         alt={alt}
         fill
-        className={cn('object-cover transition-opacity duration-300', imageLoaded ? 'opacity-100' : 'opacity-0')}
+        className={cn('object-cover transition-opacity duration-200', imageLoaded ? 'opacity-100' : 'opacity-0')}
         onLoad={() => setImageLoaded(true)}
         onError={() => setImageError(true)}
         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        loading="eager"
+        quality={90}
       />
     </div>
   );

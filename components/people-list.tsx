@@ -95,7 +95,17 @@ const PersonCard = memo(function PersonCard({
   );
 });
 
-export function PeopleList({ people, onEditClick }: { people: Person[]; onEditClick: (person: Person) => void }) {
+export function PeopleList({
+  people,
+  onEditClick,
+  groupId,
+  onDeleteSuccess,
+}: {
+  people: Person[];
+  onEditClick: (person: Person) => void;
+  groupId: string;
+  onDeleteSuccess?: (personId: string) => void;
+}) {
   const [deleting, setDeleting] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
 
@@ -112,22 +122,41 @@ export function PeopleList({ people, onEditClick }: { people: Person[]; onEditCl
     try {
       const supabase = createClient();
 
-      // Delete image from storage if it exists
-      if (person.image_url) {
-        const result = await deletePersonImage(supabase, person.image_url);
-        if (!result.success) {
-          // Continue with person deletion even if image deletion fails
+      // Check if person is in other groups
+      const { data: otherGroups } = await supabase
+        .from('group_people')
+        .select('id')
+        .eq('person_id', person.id)
+        .neq('group_id', groupId);
+
+      // Delete from group_people junction table (removes from this group)
+      const { error: junctionError } = await supabase
+        .from('group_people')
+        .delete()
+        .eq('group_id', groupId)
+        .eq('person_id', person.id);
+
+      if (junctionError) throw junctionError;
+
+      // If person is not in any other groups, delete the person and their image
+      if (!otherGroups || otherGroups.length === 0) {
+        // Delete image from storage if it exists
+        if (person.image_url) {
+          await deletePersonImage(supabase, person.image_url);
         }
+
+        // Delete person from database
+        const { error: personError } = await supabase.from('people').delete().eq('id', person.id);
+        if (personError) throw personError;
       }
 
-      // Delete person from database
-      const { error } = await supabase.from('people').delete().eq('id', person.id);
-
-      if (error) throw error;
-
-      toast.success('Person deleted successfully');
+      toast.success('Person removed from group');
       setConfirmingDelete(null);
-      // Let real-time subscription handle the removal
+
+      // Immediately update UI
+      if (onDeleteSuccess) {
+        onDeleteSuccess(person.id);
+      }
     } catch (err: unknown) {
       toast.error(getErrorMessage(err));
     } finally {
