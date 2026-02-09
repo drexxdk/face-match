@@ -88,7 +88,7 @@ export default function GameHostPage({ params }: { params: Promise<{ id: string 
     if (!groupData) return;
 
     if (people.length < optionsCount) {
-      setError(`You need at least ${optionsCount} people to start a game with ${optionsCount} options!`);
+      setError(`You need at least ${optionsCount} people to start a game session with ${optionsCount} options!`);
       return;
     }
 
@@ -190,7 +190,7 @@ export default function GameHostPage({ params }: { params: Promise<{ id: string 
                 <Icon icon={FaPlay} size="xl" color="white" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold">Start a New Game</h1>
+                <h1 className="text-3xl font-bold">Start a New Game Session</h1>
                 <div className="flex items-center gap-2">
                   <Icon icon={FaUserGroup} size="md" color="primary" />
                   <p className="text-muted-foreground text-lg">
@@ -230,7 +230,7 @@ export default function GameHostPage({ params }: { params: Promise<{ id: string 
       </Card>
 
       {/* Game Started Modal */}
-      {gameSession && gameCode && (
+      {gameSession && gameCode && groupData && (
         <GameStartedModal
           open={showGameStartedModal}
           onOpenChange={(open) => {
@@ -244,6 +244,7 @@ export default function GameHostPage({ params }: { params: Promise<{ id: string 
           gameCode={gameCode}
           sessionId={gameSession.id}
           groupId={groupId}
+          groupName={groupData.name}
         />
       )}
     </div>
@@ -484,7 +485,7 @@ function GameSetupContent({
         </Button>
         <Button onClick={startGame} disabled={!groupData || people.length < optionsCount} className="flex-1 gap-2">
           <Icon icon={FaPlay} size="sm" />
-          Start Game
+          Start Game Session
         </Button>
       </div>
 
@@ -493,7 +494,7 @@ function GameSetupContent({
       {people.length < optionsCount && !error && (
         <div className="bg-destructive/10 border-destructive/20 flex items-start gap-2 rounded-lg border p-3">
           <Icon icon={FaTriangleExclamation} size="md" color="error" className="shrink-0" />
-          <p className="text-destructive text-sm">You need at least {optionsCount} people to start a game</p>
+          <p className="text-destructive text-sm">You need at least {optionsCount} people to start a game session</p>
         </div>
       )}
     </>

@@ -272,7 +272,7 @@ export function GroupDetailClient({
                 <Icon icon={FaGear} size="md" color="primary" />
                 <CardTitle>Game Settings</CardTitle>
               </div>
-              <CardDescription>Configure how games will be played in this group</CardDescription>
+              <CardDescription>Default settings for new game sessions created from this group</CardDescription>
             </CardHeader>
             <CardContent>
               <GroupSettings
@@ -293,7 +293,7 @@ export function GroupDetailClient({
                 <Icon icon={FaPlay} size="md" color="primary" />
                 <CardTitle>Quick Actions</CardTitle>
               </div>
-              <CardDescription>Manage your group and get started</CardDescription>
+              <CardDescription>Start a new game session, add people, or share this group</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
               {/* Start Game - Primary Action */}
@@ -306,13 +306,13 @@ export function GroupDetailClient({
                   })}
                 >
                   <Icon icon={FaPlay} size="md" />
-                  Start Game
+                  Start New Game Session
                 </LoadingLink>
                 {!hasEnoughPeople && (
                   <div className="bg-destructive/10 border-destructive/20 mt-2 flex items-start gap-2 rounded-lg border p-3">
                     <Icon icon={FaTriangleExclamation} size="sm" color="error" className="mt-0.5 shrink-0" />
                     <p className="text-destructive text-xs">
-                      You need at least {updatedGroupData.options_count} people to start a game
+                      You need at least {updatedGroupData.options_count} people to start a game session
                     </p>
                   </div>
                 )}

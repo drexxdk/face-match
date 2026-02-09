@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { LoadingLink } from '@/components/ui/loading-link';
 import { Icon } from '@/components/ui/icon';
-import { FaUser, FaImage, FaArrowUpRightFromSquare } from 'react-icons/fa6';
-import { useLoading } from '@/lib/loading-context';
+import { Tooltip } from '@/components/ui/tooltip';
+import { GameStartedModal } from '@/components/game-started-modal';
+import { FaUser, FaImage, FaShareNodes, FaGear, FaClock } from 'react-icons/fa6';
 
 interface GameSession {
   id: string;
@@ -28,22 +28,58 @@ interface ActiveGamesModalProps {
   gameSessions: GameSession[];
 }
 
-export function ActiveGamesModal({ open, onOpenChange, groupId, groupName, gameSessions }: ActiveGamesModalProps) {
-  const router = useRouter();
-  const { setLoading: setGlobalLoading } = useLoading();
-  const [loadingSessionId, setLoadingSessionId] = useState<string | null>(null);
+function formatTimeAgo(timestamp: string | null): string {
+  if (!timestamp) return 'Unknown';
+  
+  const now = new Date();
+  const startTime = new Date(timestamp);
+  const diffMs = now.getTime() - startTime.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  
+  if (diffMins < 1) return 'Just now';
+  if (diffMins === 1) return '1 minute ago';
+  if (diffMins < 60) return `${diffMins} minutes ago`;
+  
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours === 1) return '1 hour ago';
+  if (diffHours < 24) return `${diffHours} hours ago`;
+  
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays === 1) return '1 day ago';
+  return `${diffDays} days ago`;
+}
 
-  // Reset loading state when modal opens
+function formatFullTimestamp(timestamp: string | null): string {
+  if (!timestamp) return 'Unknown time';
+  
+  const date = new Date(timestamp);
+  return date.toLocaleString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
+  });
+}
+
+export function ActiveGamesModal({ open, onOpenChange, groupId, groupName, gameSessions }: ActiveGamesModalProps) {
+  const [selectedSession, setSelectedSession] = useState<GameSession | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
+
+  // Reset state when modal opens
   useEffect(() => {
     if (open) {
-      setLoadingSessionId(null);
+      setSelectedSession(null);
+      setShowShareModal(false);
     }
   }, [open]);
 
-  const handleOpenGame = (sessionId: string) => {
-    setLoadingSessionId(sessionId);
-    setGlobalLoading(true);
-    router.push(`/admin/groups/${groupId}/host/${sessionId}/play`);
+  const handleOpenGame = (session: GameSession) => {
+    setSelectedSession(session);
+    setShowShareModal(true);
   };
 
   return (
@@ -69,7 +105,12 @@ export function ActiveGamesModal({ open, onOpenChange, groupId, groupName, gameS
                     {session.game_type === 'guess_name' ? 'Guess Name' : 'Guess Face'}
                   </span>
                 </div>
-                <Badge className="font-mono">{session.game_code || 'N/A'}</Badge>
+                <Tooltip content={formatFullTimestamp(session.started_at)}>
+                  <div className="flex items-center gap-1.5 text-muted-foreground text-sm cursor-help">
+                    <Icon icon={FaClock} size="xs" />
+                    <span>{formatTimeAgo(session.started_at)}</span>
+                  </div>
+                </Tooltip>
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <div className="flex flex-col gap-1">
@@ -85,19 +126,39 @@ export function ActiveGamesModal({ open, onOpenChange, groupId, groupName, gameS
                   <p className="text-sm font-semibold">{session.total_questions || 'All'}</p>
                 </div>
               </div>
-              <Button
-                onClick={() => handleOpenGame(session.id)}
-                loading={loadingSessionId === session.id}
-                size="default"
-                className="w-full gap-2"
-              >
-                <Icon icon={FaArrowUpRightFromSquare} size="sm" />
-                Open Game
-              </Button>
+              <div className="flex gap-2">
+                <LoadingLink
+                  href={`/admin/groups/${groupId}/host/${session.id}/play`}
+                  className={buttonVariants({ variant: 'secondary', className: 'flex-1 gap-2' })}
+                >
+                  <Icon icon={FaGear} size="sm" />
+                  Game Details
+                </LoadingLink>
+                <Button
+                  onClick={() => handleOpenGame(session)}
+                  size="default"
+                  className="flex-1 gap-2"
+                >
+                  <Icon icon={FaShareNodes} size="sm" />
+                  Share
+                </Button>
+              </div>
             </div>
           ))}
         </div>
       </DialogContent>
+
+      {/* Game Started Modal for sharing */}
+      {selectedSession && (
+        <GameStartedModal
+          open={showShareModal}
+          onOpenChange={setShowShareModal}
+          gameCode={selectedSession.game_code || ''}
+          sessionId={selectedSession.id}
+          groupId={groupId}
+          groupName={groupName}
+        />
+      )}
     </Dialog>
   );
 }

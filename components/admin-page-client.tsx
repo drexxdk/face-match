@@ -128,7 +128,7 @@ export const AdminPageClient = memo(function AdminPageClient({ groups }: AdminPa
             </div>
             <div>
               <h2 className="text-2xl font-semibold">Your Groups</h2>
-              <p className="text-muted-foreground text-sm">Manage your groups and active game sessions</p>
+              <p className="text-muted-foreground text-sm">Create groups of people, then start game sessions for players to join</p>
             </div>
           </div>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -154,7 +154,7 @@ export const AdminPageClient = memo(function AdminPageClient({ groups }: AdminPa
                         className={buttonVariants({ variant: 'outline', size: 'sm', className: 'flex-1 gap-2' })}
                       >
                         <Icon icon={FaGear} size="xs" />
-                        Manage
+                        Manage Group
                       </LoadingLink>
                       {activeGamesCount > 0 ? (
                         <Button
@@ -163,11 +163,11 @@ export const AdminPageClient = memo(function AdminPageClient({ groups }: AdminPa
                           className="flex-1"
                           onClick={() => setActiveGamesModalGroup(group)}
                         >
-                          Games ({activeGamesCount})
+                          Active Games ({activeGamesCount})
                         </Button>
                       ) : (
                         <Button variant="secondary" size="sm" disabled className="flex-1">
-                          No Active Games
+                          No Games Running
                         </Button>
                       )}
                     </div>

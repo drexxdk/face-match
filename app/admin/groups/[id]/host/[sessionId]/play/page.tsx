@@ -15,7 +15,8 @@ import { LoadingLink } from '@/components/ui/loading-link';
 import { GameStartedModal } from '@/components/game-started-modal';
 import { logger } from '@/lib/logger';
 import { use } from 'react';
-import { FaUserGroup, FaShareNodes, FaPlay, FaUser, FaImage } from 'react-icons/fa6';
+import { FaUserGroup, FaShareNodes, FaPlay, FaUser, FaImage, FaClock } from 'react-icons/fa6';
+import { Tooltip } from '@/components/ui/tooltip';
 import type { GameSessionWithGroup } from '@/lib/schemas';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
@@ -27,6 +28,43 @@ interface Player {
   missing: number;
   answered: boolean;
   isActive: boolean;
+}
+
+function formatTimeAgo(timestamp: string | null): string {
+  if (!timestamp) return 'Unknown';
+  
+  const now = new Date();
+  const startTime = new Date(timestamp);
+  const diffMs = now.getTime() - startTime.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  
+  if (diffMins < 1) return 'Just now';
+  if (diffMins === 1) return '1 minute ago';
+  if (diffMins < 60) return `${diffMins} minutes ago`;
+  
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours === 1) return '1 hour ago';
+  if (diffHours < 24) return `${diffHours} hours ago`;
+  
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays === 1) return '1 day ago';
+  return `${diffDays} days ago`;
+}
+
+function formatFullTimestamp(timestamp: string | null): string {
+  if (!timestamp) return 'Unknown time';
+  
+  const date = new Date(timestamp);
+  return date.toLocaleString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
+  });
 }
 
 export default function GameControlPage({
@@ -396,8 +434,13 @@ export default function GameControlPage({
               <p className="font-semibold">{gameSession.total_questions}</p>
             </div>
             <div className="bg-muted rounded p-3">
-              <p className="text-muted-foreground">Status</p>
-              <p className="font-semibold text-green-600">Active</p>
+              <p className="text-muted-foreground">Started</p>
+              <Tooltip content={formatFullTimestamp(gameSession.started_at)}>
+                <div className="flex items-center gap-1.5 font-semibold cursor-help">
+                  <Icon icon={FaClock} size="xs" />
+                  <span>{formatTimeAgo(gameSession.started_at)}</span>
+                </div>
+              </Tooltip>
             </div>
           </div>
         </CardContent>
@@ -483,6 +526,7 @@ export default function GameControlPage({
         gameCode={gameCode}
         sessionId={sessionId}
         groupId={groupId}
+        groupName={gameSession?.groups?.name || 'Group'}
       />
     </div>
   );

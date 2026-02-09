@@ -1,14 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { FaCopy, FaArrowRight, FaXmark } from 'react-icons/fa6';
+import { FaCopy, FaArrowRight, FaChartLine } from 'react-icons/fa6';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
+import { LoadingLink } from '@/components/ui/loading-link';
 import { GameQRCode } from '@/components/game-qr-code';
-import { createClient } from '@/lib/supabase/client';
-import { endGameSession } from '@/lib/game-utils';
 import toast from 'react-hot-toast';
 
 interface GameStartedModalProps {
@@ -17,10 +15,10 @@ interface GameStartedModalProps {
   gameCode: string;
   sessionId: string;
   groupId: string;
+  groupName: string;
 }
 
-export function GameStartedModal({ open, onOpenChange, gameCode, sessionId, groupId }: GameStartedModalProps) {
-  const router = useRouter();
+export function GameStartedModal({ open, onOpenChange, gameCode, sessionId, groupId, groupName }: GameStartedModalProps) {
   const [gameUrl, setGameUrl] = useState('');
 
   // Update game URL when modal opens (client-side only to avoid hydration issues)
@@ -44,21 +42,11 @@ export function GameStartedModal({ open, onOpenChange, gameCode, sessionId, grou
     }
   };
 
-  const handleEndGame = async () => {
-    const supabase = createClient();
-    await endGameSession(supabase, sessionId);
-    onOpenChange(false);
-  };
-
-  const handleGoToGame = () => {
-    router.push(`/admin/groups/${groupId}/host/${sessionId}/play`);
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Game Started!</DialogTitle>
+          <DialogTitle>{groupName}&apos;s Game</DialogTitle>
           <DialogDescription>Players can join using either method below</DialogDescription>
         </DialogHeader>
 
@@ -101,14 +89,20 @@ export function GameStartedModal({ open, onOpenChange, gameCode, sessionId, grou
 
         {/* Actions */}
         <div className="flex flex-col gap-3 pt-4 sm:flex-row">
-          <Button variant="outline" onClick={handleEndGame} className="flex flex-1 items-center gap-2">
-            <Icon icon={FaXmark} size="sm" />
-            End Game
-          </Button>
-          <Button onClick={handleGoToGame} className="flex flex-1 items-center gap-2">
+          <LoadingLink
+            href={`/admin/groups/${groupId}/host/${sessionId}/play`}
+            className={buttonVariants({ variant: 'outline', className: 'flex flex-1 items-center gap-2' })}
+          >
+            <Icon icon={FaChartLine} size="sm" />
+            Game Details
+          </LoadingLink>
+          <LoadingLink
+            href={`/game/join?code=${gameCode}`}
+            className={buttonVariants({ className: 'flex flex-1 items-center gap-2' })}
+          >
             Go to Game
             <Icon icon={FaArrowRight} size="sm" />
-          </Button>
+          </LoadingLink>
         </div>
       </DialogContent>
     </Dialog>
