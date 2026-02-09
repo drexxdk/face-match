@@ -20,7 +20,7 @@ interface GroupModalProps {
   onOpenChange: (open: boolean) => void;
   editGroup?: Pick<
     Group,
-    'id' | 'name' | 'time_limit_seconds' | 'options_count' | 'total_questions' | 'enable_timer'
+    'id' | 'name' | 'time_limit_seconds' | 'options_count' | 'enable_timer'
   > | null;
   onSuccess?: (groupId?: string) => void;
   peopleCount?: number;
@@ -33,7 +33,6 @@ export function GroupModal({ open, onOpenChange, editGroup, onSuccess, peopleCou
     name: editGroup?.name || '',
     time_limit_seconds: editGroup?.time_limit_seconds || 15,
     options_count: editGroup?.options_count || 3,
-    total_questions: editGroup?.total_questions || Math.min(peopleCount, 10),
     enable_timer: editGroup?.enable_timer ?? true,
   });
   const [isSaving, setIsSaving] = useState(false);
@@ -71,11 +70,10 @@ export function GroupModal({ open, onOpenChange, editGroup, onSuccess, peopleCou
         name: editGroup?.name || '',
         time_limit_seconds: editGroup?.time_limit_seconds || 15,
         options_count: editGroup?.options_count || 3,
-        total_questions: editGroup?.total_questions || Math.min(peopleCount, 10),
         enable_timer: editGroup?.enable_timer ?? true,
       });
     }
-  }, [open, editGroup, peopleCount]);
+  }, [open, editGroup]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,7 +110,6 @@ export function GroupModal({ open, onOpenChange, editGroup, onSuccess, peopleCou
             name: sanitizedName,
             time_limit_seconds: formData.time_limit_seconds,
             options_count: formData.options_count,
-            total_questions: formData.total_questions,
             enable_timer: formData.enable_timer,
           })
           .eq('id', editGroup.id);
@@ -137,7 +134,6 @@ export function GroupModal({ open, onOpenChange, editGroup, onSuccess, peopleCou
             creator_id: user.id,
             time_limit_seconds: formData.time_limit_seconds,
             options_count: formData.options_count,
-            total_questions: formData.total_questions,
             enable_timer: formData.enable_timer,
           })
           .select()
@@ -242,24 +238,6 @@ export function GroupModal({ open, onOpenChange, editGroup, onSuccess, peopleCou
               step="1"
               value={formData.options_count}
               onChange={(e) => setFormData({ ...formData, options_count: parseInt(e.target.value) || 3 })}
-              disabled={isSaving}
-              className="bg-secondary accent-primary h-2 w-full cursor-pointer appearance-none rounded-lg"
-            />
-          </div>
-
-          <div>
-            <div className="mb-3 flex items-center justify-between">
-              <Label htmlFor="total-questions">Number of questions</Label>
-              <span className="bg-muted rounded px-3 py-1 text-sm font-medium">{formData.total_questions}</span>
-            </div>
-            <input
-              id="total-questions"
-              type="range"
-              min="1"
-              max={peopleCount}
-              step="1"
-              value={formData.total_questions}
-              onChange={(e) => setFormData({ ...formData, total_questions: parseInt(e.target.value) || 1 })}
               disabled={isSaving}
               className="bg-secondary accent-primary h-2 w-full cursor-pointer appearance-none rounded-lg"
             />

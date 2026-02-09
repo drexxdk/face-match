@@ -14,11 +14,11 @@ interface GroupSettingsProps {
   groupId: string;
   initialGroup: Pick<
     Group,
-    'id' | 'name' | 'time_limit_seconds' | 'options_count' | 'total_questions' | 'enable_timer'
+    'id' | 'name' | 'time_limit_seconds' | 'options_count' | 'enable_timer'
   >;
   peopleCount?: number;
   onUpdate?: (
-    updatedGroup: Pick<Group, 'name' | 'time_limit_seconds' | 'options_count' | 'total_questions' | 'enable_timer'>,
+    updatedGroup: Pick<Group, 'name' | 'time_limit_seconds' | 'options_count' | 'enable_timer'>,
   ) => void;
   isEditing?: boolean;
   onEditChange?: (isEditing: boolean) => void;
@@ -36,9 +36,6 @@ export const GroupSettings = memo(function GroupSettings({
   const [groupName, setGroupName] = useState<string>(initialGroup.name);
   const [timeLimitSeconds, setTimeLimitSeconds] = useState<number>(Number(initialGroup.time_limit_seconds) || 30);
   const [optionsCount, setOptionsCount] = useState<number>(Number(initialGroup.options_count) || 4);
-  const [totalQuestions, setTotalQuestions] = useState<number>(
-    Number(initialGroup.total_questions) || Math.min(peopleCount, 10),
-  );
   const [enableTimer, setEnableTimer] = useState<boolean>(initialGroup.enable_timer ?? true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -52,9 +49,8 @@ export const GroupSettings = memo(function GroupSettings({
     setGroupName(initialGroup.name);
     setTimeLimitSeconds(Number(initialGroup.time_limit_seconds) || 30);
     setOptionsCount(Number(initialGroup.options_count) || 4);
-    setTotalQuestions(Number(initialGroup.total_questions) || Math.min(peopleCount, 10));
     setEnableTimer(initialGroup.enable_timer ?? true);
-  }, [initialGroup, peopleCount]);
+  }, [initialGroup]);
 
   const handleSave = useCallback(async () => {
     // Sanitize and validate group name
@@ -81,7 +77,6 @@ export const GroupSettings = memo(function GroupSettings({
           name: sanitizedName,
           time_limit_seconds: timeLimitSeconds,
           options_count: optionsCount,
-          total_questions: totalQuestions,
           enable_timer: enableTimer,
         })
         .eq('id', groupId);
@@ -99,7 +94,6 @@ export const GroupSettings = memo(function GroupSettings({
           name: sanitizedName,
           time_limit_seconds: timeLimitSeconds,
           options_count: optionsCount,
-          total_questions: totalQuestions,
           enable_timer: enableTimer,
         });
       }
@@ -113,19 +107,18 @@ export const GroupSettings = memo(function GroupSettings({
     } finally {
       setIsSaving(false);
     }
-  }, [groupName, timeLimitSeconds, optionsCount, totalQuestions, enableTimer, groupId, onUpdate, onEditChange]);
+  }, [groupName, timeLimitSeconds, optionsCount, enableTimer, groupId, onUpdate, onEditChange]);
 
   const handleCancel = useCallback(() => {
     setGroupName(initialGroup.name);
     setTimeLimitSeconds(initialGroup.time_limit_seconds ?? 30);
     setOptionsCount(initialGroup.options_count ?? 4);
-    setTotalQuestions(initialGroup.total_questions ?? Math.min(peopleCount, 10));
     setEnableTimer(initialGroup.enable_timer ?? true);
     setIsEditing(false);
     if (onEditChange) {
       onEditChange(false);
     }
-  }, [initialGroup, peopleCount, onEditChange]);
+  }, [initialGroup, onEditChange]);
 
   if (isEditing) {
     return (
@@ -182,23 +175,6 @@ export const GroupSettings = memo(function GroupSettings({
           />
         </div>
 
-        <div>
-          <div className="mb-3 flex items-center justify-between">
-            <Label htmlFor="total-questions">Number of questions</Label>
-            <span className="bg-muted rounded px-3 py-1 text-sm font-medium">{totalQuestions}</span>
-          </div>
-          <input
-            id="total-questions"
-            type="range"
-            min="1"
-            max={peopleCount}
-            step="1"
-            value={totalQuestions}
-            onChange={(e) => setTotalQuestions(parseInt(e.target.value) || 1)}
-            className="bg-secondary accent-primary h-2 w-full cursor-pointer appearance-none rounded-lg"
-          />
-        </div>
-
         <div className="flex gap-2">
           <Button onClick={handleCancel} variant="outline" disabled={isSaving} className="flex-1">
             Cancel
@@ -224,10 +200,6 @@ export const GroupSettings = memo(function GroupSettings({
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium">Options per question</span>
         <span className="bg-muted rounded px-3 py-1 text-sm font-medium">{optionsCount}</span>
-      </div>
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-medium">Number of questions</span>
-        <span className="bg-muted rounded px-3 py-1 text-sm font-medium">{totalQuestions}</span>
       </div>
     </div>
   );
