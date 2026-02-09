@@ -16,9 +16,10 @@ interface GameStartedModalProps {
   sessionId: string;
   groupId: string;
   groupName: string;
+  isOnHostPage?: boolean;
 }
 
-export function GameStartedModal({ open, onOpenChange, gameCode, sessionId, groupId, groupName }: GameStartedModalProps) {
+export function GameStartedModal({ open, onOpenChange, gameCode, sessionId, groupId, groupName, isOnHostPage = false }: GameStartedModalProps) {
   const [gameUrl, setGameUrl] = useState('');
 
   // Update game URL when modal opens (client-side only to avoid hydration issues)
@@ -89,13 +90,23 @@ export function GameStartedModal({ open, onOpenChange, gameCode, sessionId, grou
 
         {/* Actions */}
         <div className="flex flex-col gap-3 pt-4 sm:flex-row">
-          <LoadingLink
-            href={`/admin/${groupId}/host/${sessionId}`}
-            className={buttonVariants({ variant: 'outline', className: 'flex flex-1 items-center gap-2' })}
-          >
-            <Icon icon={FaChartLine} size="sm" />
-            Game Details
-          </LoadingLink>
+          {isOnHostPage ? (
+            <LoadingLink
+              href="/admin"
+              className={buttonVariants({ variant: 'outline', className: 'flex flex-1 items-center gap-2' })}
+            >
+              <Icon icon={FaChartLine} size="sm" />
+              Back to Dashboard
+            </LoadingLink>
+          ) : (
+            <LoadingLink
+              href={`/admin/${groupId}/host/${sessionId}`}
+              className={buttonVariants({ variant: 'outline', className: 'flex flex-1 items-center gap-2' })}
+            >
+              <Icon icon={FaChartLine} size="sm" />
+              Game Details
+            </LoadingLink>
+          )}
           <LoadingLink
             href={`/game/join?code=${gameCode}`}
             className={buttonVariants({ className: 'flex flex-1 items-center gap-2' })}

@@ -3,20 +3,22 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { InfoListCard } from '@/components/ui/section-card';
-import { Badge } from '@/components/ui/badge';
 import { ErrorMessage } from '@/components/ui/error-message';
 import { Icon } from '@/components/ui/icon';
+import { PageHero } from '@/components/ui/page-hero';
+import { PageContainer } from '@/components/ui/page-container';
+import { SettingsGrid } from '@/components/ui/settings-grid';
+import { PlayerStatsBadges } from '@/components/ui/stats-badges';
+import { ActionCard } from '@/components/ui/action-card';
 import { endGameSession } from '@/lib/game-utils';
 import { useLoading } from '@/lib/loading-context';
-import { LoadingLink } from '@/components/ui/loading-link';
 import { GameStartedModal } from '@/components/game-started-modal';
 import { logger } from '@/lib/logger';
 import { use } from 'react';
-import { FaUserGroup, FaShareNodes, FaPlay, FaUser, FaImage, FaClock } from 'react-icons/fa6';
-import { Tooltip } from '@/components/ui/tooltip';
+import { FaUserGroup, FaShareNodes, FaPlay, FaUser, FaImage, FaClock, FaListOl, FaCircleCheck } from 'react-icons/fa6';
 import type { GameSessionWithGroup } from '@/lib/schemas';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
@@ -28,43 +30,6 @@ interface Player {
   missing: number;
   answered: boolean;
   isActive: boolean;
-}
-
-function formatTimeAgo(timestamp: string | null): string {
-  if (!timestamp) return 'Unknown';
-  
-  const now = new Date();
-  const startTime = new Date(timestamp);
-  const diffMs = now.getTime() - startTime.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  
-  if (diffMins < 1) return 'Just now';
-  if (diffMins === 1) return '1 minute ago';
-  if (diffMins < 60) return `${diffMins} minutes ago`;
-  
-  const diffHours = Math.floor(diffMins / 60);
-  if (diffHours === 1) return '1 hour ago';
-  if (diffHours < 24) return `${diffHours} hours ago`;
-  
-  const diffDays = Math.floor(diffHours / 24);
-  if (diffDays === 1) return '1 day ago';
-  return `${diffDays} days ago`;
-}
-
-function formatFullTimestamp(timestamp: string | null): string {
-  if (!timestamp) return 'Unknown time';
-  
-  const date = new Date(timestamp);
-  return date.toLocaleString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: true,
-  });
 }
 
 export default function GameControlPage({
@@ -98,7 +63,7 @@ export default function GameControlPage({
       // Get game session
       const { data: session } = await supabase
         .from('game_sessions')
-        .select('*, groups(*, group_people(count))')
+        .select('*, groups(*)')
         .eq('id', sessionId)
         .single();
 
@@ -116,11 +81,6 @@ export default function GameControlPage({
       const { data: answers } = await supabase.from('game_answers').select('*').eq('session_id', sessionId);
 
       logger.log('Fetched game_answers for sessionId', sessionId, ':', answers);
-
-      // Calculate total questions: use session value, or fallback to people count, or 10 as last resort
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const peopleCount = (session.groups as any)?.group_people?.[0]?.count ?? 10;
-      const totalQuestions = session.total_questions ?? peopleCount;
 
       // Count occurrences of each player name (only join records where correct_option_id is null)
       // Sort by created_at to maintain join order
@@ -229,6 +189,7 @@ export default function GameControlPage({
         })),
       );
 
+      const totalQuestions = session.total_questions ?? 10;
       const activePlayers: Player[] = Array.from(playerStats.entries()).map(([, stats]) => {
         const total = stats.correct + stats.wrong;
         const missing = Math.max(0, totalQuestions - total);
@@ -249,7 +210,17 @@ export default function GameControlPage({
       setPlayers(
         activePlayers.length > 0
           ? activePlayers
-          : [],
+          : [
+              {
+                id: '1',
+                name: 'Waiting for players...',
+                correct: 0,
+                wrong: 0,
+                missing: 0,
+                answered: false,
+                isActive: false,
+              },
+            ],
       );
       setIsLoading(false);
       setLoading(false); // Reset global loading
@@ -375,43 +346,28 @@ export default function GameControlPage({
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Hero Header */}
-      <Card variant="flush">
-        <div className="relative overflow-hidden">
-          <div className="from-primary/10 absolute inset-0 bg-linear-to-br via-purple-500/10 to-pink-500/10" />
-          <div className="relative flex items-start justify-between gap-6 p-8">
-            <div className="flex items-start gap-6">
-              <div className="from-primary flex size-16 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br to-purple-600 shadow-lg">
-                <Icon icon={FaPlay} size="xl" color="white" />
-              </div>
-              <div>
-                <h1 className="mb-2 text-3xl font-bold">{gameSession.groups?.name || 'Game Session'}</h1>
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-2">
-                    <Icon icon={gameSession.game_type === 'guess_name' ? FaUser : FaImage} size="md" color="primary" />
-                    <p className="text-muted-foreground text-lg">
-                      <span className="text-foreground font-semibold">
-                        {gameSession.game_type === 'guess_name' ? 'Guess the Name' : 'Guess the Face'}
-                      </span>
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Icon icon={FaUserGroup} size="md" color="primary" />
-                    <p className="text-muted-foreground text-lg">
-                      <span className="text-foreground font-semibold">{players.length}</span>{' '}
-                      {players.length === 1 ? 'player' : 'players'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <Button onClick={() => setShowShareModal(true)} variant="outline" size="icon" className="shrink-0">
-              <Icon icon={FaShareNodes} size="sm" />
-            </Button>
-          </div>
-        </div>
-      </Card>
+    <PageContainer spacing="normal">
+      <PageHero
+        icon={FaPlay}
+        iconSize="xl"
+        title={gameSession.groups?.name || 'Game Session'}
+        metadata={[
+          {
+            icon: gameSession.game_type === 'guess_name' ? FaUser : FaImage,
+            value: gameSession.game_type === 'guess_name' ? 'Guess the Name' : 'Guess the Face',
+          },
+          {
+            icon: FaUserGroup,
+            value: `${players.length} ${players.length === 1 ? 'player' : 'players'}`,
+          },
+        ]}
+        actions={
+          <Button onClick={() => setShowShareModal(true)} variant="default" size="lg" className="gap-2">
+            <Icon icon={FaShareNodes} size="md" />
+            Share
+          </Button>
+        }
+      />
 
       {/* Game Info */}
       <Card variant="compact">
@@ -419,29 +375,31 @@ export default function GameControlPage({
           <CardTitle>Game Settings</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
-            <div className="bg-muted rounded p-3">
-              <p className="text-muted-foreground">Time Limit</p>
-              <p className="font-semibold">{gameSession.time_limit_seconds || 30}s</p>
-            </div>
-            <div className="bg-muted rounded p-3">
-              <p className="text-muted-foreground">Options</p>
-              <p className="font-semibold">{gameSession.options_count || 4}</p>
-            </div>
-            <div className="bg-muted rounded p-3">
-              <p className="text-muted-foreground">Questions</p>
-              <p className="font-semibold">{gameSession.total_questions}</p>
-            </div>
-            <div className="bg-muted rounded p-3">
-              <p className="text-muted-foreground">Started</p>
-              <Tooltip content={formatFullTimestamp(gameSession.started_at)}>
-                <div className="flex items-center gap-1.5 font-semibold cursor-help">
-                  <Icon icon={FaClock} size="xs" />
-                  <span>{formatTimeAgo(gameSession.started_at)}</span>
-                </div>
-              </Tooltip>
-            </div>
-          </div>
+          <SettingsGrid
+            columns={4}
+            items={[
+              {
+                label: 'Time Limit',
+                value: `${gameSession.time_limit_seconds || 30}s`,
+                icon: FaClock,
+              },
+              {
+                label: 'Options',
+                value: gameSession.options_count || 4,
+              },
+              {
+                label: 'Questions',
+                value: gameSession.total_questions,
+                icon: FaListOl,
+              },
+              {
+                label: 'Status',
+                value: 'Active',
+                valueClassName: 'text-green-600',
+                icon: FaCircleCheck,
+              },
+            ]}
+          />
         </CardContent>
       </Card>
 
@@ -451,61 +409,43 @@ export default function GameControlPage({
           <CardTitle>Players ({players.length})</CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
-          {players.length === 0 ? (
-            <div className="bg-muted text-muted-foreground flex items-center justify-center rounded-lg p-8 text-center">
-              <p>Waiting for players...</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {players.map((player) => (
-                <div key={player.id} className="bg-muted flex items-center justify-between gap-3 rounded-lg p-3">
-                  <div className="flex items-center gap-3 overflow-hidden text-ellipsis whitespace-nowrap">
-                    <div
-                      className={`h-3 w-3 shrink-0 rounded-full ${player.isActive ? 'bg-green-500' : 'bg-gray-300'}`}
-                    />
-                    <span className="overflow-hidden font-medium text-ellipsis whitespace-nowrap">{player.name}</span>
-                  </div>
-                  <div className="text-muted-foreground shrink-0 space-x-2 text-sm">
-                    {player.correct > 0 && (
-                      <Badge variant="default" className="bg-green-600 hover:bg-green-600">
-                        {player.correct} correct
-                      </Badge>
-                    )}
-                    {player.wrong > 0 && (
-                      <Badge variant="destructive" className="hover:bg-destructive">
-                        {player.wrong} wrong
-                      </Badge>
-                    )}
-                    {player.missing > 0 && (
-                      <Badge variant="secondary" className="hover:bg-secondary">
-                        {player.missing} missing
-                      </Badge>
-                    )}
-                  </div>
+          <div className="space-y-2">
+            {players.map((player) => (
+              <div key={player.id} className="bg-muted flex items-center justify-between gap-3 rounded-lg p-3">
+                <div className="flex items-center gap-3 overflow-hidden text-ellipsis whitespace-nowrap">
+                  <div
+                    className={`h-3 w-3 shrink-0 rounded-full ${player.isActive ? 'bg-green-500' : 'bg-gray-300'}`}
+                  />
+                  <span className="overflow-hidden font-medium text-ellipsis whitespace-nowrap">{player.name}</span>
                 </div>
-              ))}
-            </div>
-          )}
+                <PlayerStatsBadges
+                  correct={player.correct}
+                  wrong={player.wrong}
+                  missing={player.missing}
+                  className="text-muted-foreground shrink-0 text-sm"
+                />
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
 
       {/* Actions */}
-      <Card variant="compact">
-        <CardContent className="flex flex-wrap gap-4 pt-6">
-          <Button onClick={endGame} variant="destructive" className="flex-1">
-            End Game
-          </Button>
-          <LoadingLink
-            href="/admin"
-            className={buttonVariants({
-              variant: 'outline',
-              className: 'flex-1',
-            })}
-          >
-            Back to Dashboard
-          </LoadingLink>
-        </CardContent>
-      </Card>
+      <ActionCard
+        layout="flex"
+        actions={[
+          {
+            label: 'End Game',
+            variant: 'destructive',
+            onClick: endGame,
+          },
+          {
+            label: 'Back to Dashboard',
+            variant: 'outline',
+            href: '/admin',
+          },
+        ]}
+      />
 
       <InfoListCard
         title="How to Play"
@@ -525,9 +465,8 @@ export default function GameControlPage({
         gameCode={gameCode}
         sessionId={sessionId}
         groupId={groupId}
-        groupName={gameSession?.groups?.name || 'Group'}
-        isOnHostPage={true}
+        groupName={gameSession.groups?.name || 'Game Session'}
       />
-    </div>
+    </PageContainer>
   );
 }

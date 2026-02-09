@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,24 +11,60 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import toast from 'react-hot-toast';
 import { getErrorMessage, logError } from '@/lib/logger';
 import { sanitizeGroupName, validateLength } from '@/lib/security';
+import { useGroupNameValidation } from '@/lib/hooks/use-group-name-validation';
+import { useLoading } from '@/lib/loading-context';
 import type { Group } from '@/lib/schemas';
 
 interface GroupModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  editGroup?: Pick<Group, 'id' | 'name' | 'time_limit_seconds' | 'options_count' | 'enable_timer'> | null;
-  onSuccess?: () => void;
+  editGroup?: Pick<Group, 'id' | 'name' | 'time_limit_seconds' | 'options_count' | 'total_questions' | 'enable_timer'> | null;
+  onSuccess?: (groupId?: string) => void;
   peopleCount?: number;
 }
 
 export function GroupModal({ open, onOpenChange, editGroup, onSuccess, peopleCount = 4 }: GroupModalProps) {
+  const router = useRouter();
+  const { setLoading } = useLoading();
   const [formData, setFormData] = useState({
     name: editGroup?.name || '',
     time_limit_seconds: editGroup?.time_limit_seconds || 15,
     options_count: editGroup?.options_count || 3,
+    total_questions: editGroup?.total_questions || Math.min(peopleCount, 10),
     enable_timer: editGroup?.enable_timer ?? true,
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [userGroups, setUserGroups] = useState<{ id: string; name: string }[]>([]);
+
+  // Fetch user's groups for duplicate validation
+  useEffect(() => {
+    const fetchUserGroups = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('groups')
+        .select('id, name')
+        .eq('creator_id', user.id);
+
+      if (!error && data) {
+        setUserGroups(data);
+      }
+    };
+
+    if (open) {
+      fetchUserGroups();
+    }
+  }, [open]);
+
+  // Use the validation hook
+  const { duplicateError } = useGroupNameValidation(
+    userGroups,
+    formData.name,
+    editGroup?.id
+  );
 
   // Reset form when modal opens/closes or editGroup changes
   useEffect(() => {
@@ -36,10 +73,11 @@ export function GroupModal({ open, onOpenChange, editGroup, onSuccess, peopleCou
         name: editGroup?.name || '',
         time_limit_seconds: editGroup?.time_limit_seconds || 15,
         options_count: editGroup?.options_count || 3,
+        total_questions: editGroup?.total_questions || Math.min(peopleCount, 10),
         enable_timer: editGroup?.enable_timer ?? true,
       });
     }
-  }, [open, editGroup]);
+  }, [open, editGroup, peopleCount]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,6 +95,12 @@ export function GroupModal({ open, onOpenChange, editGroup, onSuccess, peopleCou
       return;
     }
 
+    // Check for duplicate name
+    if (duplicateError) {
+      toast.error(duplicateError);
+      return;
+    }
+
     setIsSaving(true);
 
     try {
@@ -70,6 +114,7 @@ export function GroupModal({ open, onOpenChange, editGroup, onSuccess, peopleCou
             name: sanitizedName,
             time_limit_seconds: formData.time_limit_seconds,
             options_count: formData.options_count,
+            total_questions: formData.total_questions,
             enable_timer: formData.enable_timer,
           })
           .eq('id', editGroup.id);
@@ -87,13 +132,14 @@ export function GroupModal({ open, onOpenChange, editGroup, onSuccess, peopleCou
           throw new Error('Not authenticated');
         }
 
-        const { error: insertError } = await supabase
+        const { data: newGroup, error: insertError } = await supabase
           .from('groups')
           .insert({
             name: sanitizedName,
             creator_id: user.id,
             time_limit_seconds: formData.time_limit_seconds,
             options_count: formData.options_count,
+            total_questions: formData.total_questions,
             enable_timer: formData.enable_timer,
           })
           .select()
@@ -102,10 +148,23 @@ export function GroupModal({ open, onOpenChange, editGroup, onSuccess, peopleCou
         if (insertError) throw insertError;
 
         toast.success('Group created successfully!');
+        
+        // Navigate to the new group's manage page
+        if (newGroup?.id) {
+          setLoading(true);
+          onOpenChange(false);
+          router.push(`/admin/${newGroup.id}`);
+        } else {
+          // Fallback: call onSuccess and close modal
+          onSuccess?.(newGroup?.id);
+          onOpenChange(false);
+        }
+        return;
       }
 
-      onOpenChange(false);
+      // For edits, just refresh without navigation
       onSuccess?.();
+      onOpenChange(false);
     } catch (err) {
       logError('Error saving group', { error: err });
       toast.error(getErrorMessage(err));
@@ -139,6 +198,9 @@ export function GroupModal({ open, onOpenChange, editGroup, onSuccess, peopleCou
               required
               disabled={isSaving}
             />
+            {duplicateError && (
+              <p className="text-destructive text-sm">{duplicateError}</p>
+            )}
           </div>
 
           <div className="flex items-center gap-3">
@@ -184,6 +246,24 @@ export function GroupModal({ open, onOpenChange, editGroup, onSuccess, peopleCou
               step="1"
               value={formData.options_count}
               onChange={(e) => setFormData({ ...formData, options_count: parseInt(e.target.value) || 3 })}
+              disabled={isSaving}
+              className="bg-secondary accent-primary h-2 w-full cursor-pointer appearance-none rounded-lg"
+            />
+          </div>
+
+          <div>
+            <div className="mb-3 flex items-center justify-between">
+              <Label htmlFor="total-questions">Number of questions</Label>
+              <span className="bg-muted rounded px-3 py-1 text-sm font-medium">{formData.total_questions}</span>
+            </div>
+            <input
+              id="total-questions"
+              type="range"
+              min="1"
+              max={peopleCount}
+              step="1"
+              value={formData.total_questions}
+              onChange={(e) => setFormData({ ...formData, total_questions: parseInt(e.target.value) || 1 })}
               disabled={isSaving}
               className="bg-secondary accent-primary h-2 w-full cursor-pointer appearance-none rounded-lg"
             />

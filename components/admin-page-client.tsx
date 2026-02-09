@@ -2,17 +2,13 @@
 
 import { useEffect, useState, memo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import {
-  FaUserGroup,
-  FaRightToBracket,
-  FaFolder,
-  FaPlus,
-  FaGear,
-} from 'react-icons/fa6';
+import { FaUserGroup, FaRightToBracket, FaFolder, FaPlus, FaGear } from 'react-icons/fa6';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
+import { PageHero } from '@/components/ui/page-hero';
+import { PageContainer } from '@/components/ui/page-container';
 import { InfoListCard } from '@/components/ui/section-card';
 import { LoadingLink } from '@/components/ui/loading-link';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -64,7 +60,7 @@ export const AdminPageClient = memo(function AdminPageClient({ groups }: AdminPa
   }, [setLoading]);
 
   const handleGroupCreated = () => {
-    router.push('/admin');
+    // Modal handles navigation directly, just refresh the page data
     router.refresh();
   };
 
@@ -76,37 +72,26 @@ export const AdminPageClient = memo(function AdminPageClient({ groups }: AdminPa
   };
 
   return (
-    <div className="flex w-full flex-1 flex-col gap-12">
-      {/* Hero Section with Gradient */}
-      <Card variant="flush" className="relative overflow-hidden">
-        <div className="from-primary/10 absolute inset-0 bg-linear-to-br via-purple-500/10 to-pink-500/10" />
-        <div className="relative flex items-start gap-6 p-8">
-          <div className="from-primary flex size-20 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br to-purple-600 shadow-lg">
-            <Icon icon={FaUserGroup} size="2xl" color="white" />
-          </div>
-          <div className="flex grow flex-col gap-4">
-            <div>
-              <h1 className="from-primary mb-2 bg-linear-to-r to-purple-600 bg-clip-text text-4xl font-bold text-transparent">
-                Welcome to Face Match!
-              </h1>
-              <p className="text-muted-foreground text-lg">
-                A social icebreaker game that helps people learn about each other. Create groups for your team,
-                classroom, or event and help everyone connect!
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <Button onClick={() => setShowCreateModal(true)} size="lg" className="gap-2">
-                <Icon icon={FaPlus} size="md" />
-                Create Group
-              </Button>
-              <LoadingLink href="/game/join" className={buttonVariants({ size: 'lg', className: 'gap-2' })}>
-                <Icon icon={FaRightToBracket} size="md" />
-                Join Game
-              </LoadingLink>
-            </div>
-          </div>
-        </div>
-      </Card>
+    <PageContainer spacing="spacious">
+      <PageHero
+        icon={FaUserGroup}
+        iconSize="2xl"
+        title="Welcome to Face Match!"
+        titleClassName="from-primary bg-linear-to-r to-purple-600 bg-clip-text text-transparent"
+        description="A social icebreaker game that helps people learn about each other. Create groups for your team, classroom, or event and help everyone connect!"
+        actions={
+          <>
+            <Button onClick={() => setShowCreateModal(true)} size="lg" className="gap-2">
+              <Icon icon={FaPlus} size="md" />
+              Create Group
+            </Button>
+            <LoadingLink href="/game/join" className={buttonVariants({ size: 'lg', className: 'gap-2' })}>
+              <Icon icon={FaRightToBracket} size="md" />
+              Join Game
+            </LoadingLink>
+          </>
+        }
+      />
 
       {/* Groups Section */}
       {!groups || groups.length === 0 ? (
@@ -128,7 +113,9 @@ export const AdminPageClient = memo(function AdminPageClient({ groups }: AdminPa
             </div>
             <div>
               <h2 className="text-2xl font-semibold">Your Groups</h2>
-              <p className="text-muted-foreground text-sm">Create groups of people, then start game sessions for players to join</p>
+              <p className="text-muted-foreground text-sm">
+                Create groups of people, then start game sessions for players to join
+              </p>
             </div>
           </div>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -193,7 +180,7 @@ export const AdminPageClient = memo(function AdminPageClient({ groups }: AdminPa
       />
 
       <GroupModal open={showCreateModal} onOpenChange={handleCreateModalChange} onSuccess={handleGroupCreated} />
-      
+
       {activeGamesModalGroup && (
         <ActiveGamesModal
           open={!!activeGamesModalGroup}
@@ -203,6 +190,6 @@ export const AdminPageClient = memo(function AdminPageClient({ groups }: AdminPa
           gameSessions={activeGamesModalGroup.game_sessions}
         />
       )}
-    </div>
+    </PageContainer>
   );
 });

@@ -18,6 +18,7 @@ import { GroupModal } from '@/components/group-modal';
 import { BulkUploadPeople } from '@/components/bulk-upload-people';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
+import { PageHero } from '@/components/ui/page-hero';
 import { SectionCard } from '@/components/ui/section-card';
 import { buttonVariants } from '@/components/ui/button';
 import { Button } from '@/components/ui/button';
@@ -57,6 +58,15 @@ export function GroupDetailClient({
   const [editPerson, setEditPerson] = useState<Person | null>(null);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
 
+  // Handle person added directly from modal (more reliable than waiting for real-time)
+  const handlePersonAdded = useCallback((person: Person) => {
+    setPeople((prev) => {
+      const exists = prev.some((p) => p.id === person.id);
+      if (exists) return prev;
+      return [...prev, person].sort((a, b) => a.name.localeCompare(b.name));
+    });
+  }, []);
+
   // Reset loading state when component mounts
   useEffect(() => {
     setLoading(false);
@@ -81,7 +91,13 @@ export function GroupDetailClient({
 
       // Fetch the person details
       const supabase = createClient();
-      const { data: person } = await supabase.from('people').select('*').eq('id', record.person_id).single();
+      const { data: person, error } = await supabase.from('people').select('*').eq('id', record.person_id).single();
+
+      if (error) {
+        logError(error);
+        logger.log('Failed to fetch person after real-time insert event. This may be due to RLS policy.');
+        return;
+      }
 
       if (person) {
         setPeople((prev) => {
@@ -172,7 +188,7 @@ export function GroupDetailClient({
 
   const hasEnoughPeople = people.length >= (updatedGroupData.options_count ?? 4);
 
-  const handleGroupUpdate = (updated: Pick<Group, 'name' | 'time_limit_seconds' | 'options_count'>) => {
+  const handleGroupUpdate = (updated: Pick<Group, 'name' | 'time_limit_seconds' | 'options_count' | 'total_questions' | 'enable_timer'>) => {
     setUpdatedGroupData((prev) => ({
       ...prev,
       ...updated,
@@ -232,36 +248,32 @@ export function GroupDetailClient({
   return (
     <div className="space-y-6">
       {/* Hero Header */}
-      <Card variant="flush">
-        <div className="relative overflow-hidden">
-          <div className="from-primary/10 absolute inset-0 bg-linear-to-br via-purple-500/10 to-pink-500/10" />
-          <div className="relative flex items-start justify-between gap-6 p-8">
-            <div className="flex items-start gap-6">
-              <div className="from-primary flex size-16 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br to-purple-600 shadow-lg">
-                <Icon icon={FaUserGroup} size="xl" color="white" />
-              </div>
-              <div>
-                <h1 className="mb-2 text-3xl font-bold">{updatedGroupData.name}</h1>
-                <div className="flex items-center gap-2">
-                  <Icon icon={FaUserGroup} size="md" color="primary" />
-                  <p className="text-muted-foreground text-lg">
-                    <span className="text-foreground font-semibold">{people.length}</span> people in this group
-                  </p>
-                </div>
-              </div>
-            </div>
+      <PageHero
+        icon={FaUserGroup}
+        iconSize="xl"
+        title={updatedGroupData.name}
+        metadata={[
+          {
+            icon: FaUserGroup,
+            value: `${people.length} people in this group`,
+          },
+        ]}
+        actions={
+          <div className="flex gap-2">
+            <Button onClick={handleShareGroup} variant="outline" size="icon" disabled={isGeneratingCode}>
+              <Icon icon={FaShareNodes} size="sm" />
+            </Button>
             <Button
               onClick={() => setShowEditGroupModal(true)}
               variant="outline"
               size="icon"
               aria-label="Edit group settings"
-              className="shrink-0"
             >
               <Icon icon={FaPencil} size="sm" />
             </Button>
           </div>
-        </div>
-      </Card>
+        }
+      />
 
       <div className="grid gap-6 md:grid-cols-2">
         <div className="flex flex-col gap-6">
@@ -295,7 +307,7 @@ export function GroupDetailClient({
               </div>
               <CardDescription>Start a new game session, add people, or share this group</CardDescription>
             </CardHeader>
-            <CardContent className="flex flex-col gap-4">
+            <CardContent className="flex flex-col gap-6">
               {/* Start Game - Primary Action */}
               <div>
                 <LoadingLink
@@ -318,31 +330,15 @@ export function GroupDetailClient({
                 )}
               </div>
 
-              <Divider text="People" />
-
-              {/* People Actions */}
-              <div className="grid grid-cols-2 gap-2">
-                <Button onClick={handleAddPersonClick} variant="default" className="gap-2">
-                  <Icon icon={FaPlus} size="sm" />
-                  Add Person
-                </Button>
-                <Button onClick={() => setShowBulkUpload(true)} variant="outline" className="gap-2">
-                  <Icon icon={FaFileArrowUp} size="sm" />
-                  Bulk Upload
-                </Button>
-              </div>
-
               <Divider text="Manage" />
 
               {/* Group Management Actions */}
-              <div className="flex flex-col gap-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <Button onClick={handleShareGroup} variant="outline" className="gap-2" disabled={isGeneratingCode}>
-                    <Icon icon={FaShareNodes} size="sm" />
-                    {isGeneratingCode ? 'Loading...' : 'Share'}
-                  </Button>
-                  <DuplicateGroupButton groupId={groupId} />
-                </div>
+              <div className="flex flex-col gap-3">
+                <Button onClick={() => setShowEditGroupModal(true)} variant="outline" className="gap-2">
+                  <Icon icon={FaPencil} size="sm" />
+                  Edit Group
+                </Button>
+                <DuplicateGroupButton groupId={groupId} />
                 <DeleteGroupButton groupId={groupId} />
               </div>
             </CardContent>
@@ -350,7 +346,22 @@ export function GroupDetailClient({
         </div>
 
         <div>
-          <SectionCard title="People" description="Manage people in this group">
+          <SectionCard 
+            title="People" 
+            description="Manage people in this group"
+            actions={
+              <>
+                <Button onClick={() => setShowBulkUpload(true)} variant="outline" size="sm" className="gap-2">
+                  <Icon icon={FaFileArrowUp} size="sm" />
+                  Bulk Upload
+                </Button>
+                <Button onClick={handleAddPersonClick} size="sm" className="gap-2">
+                  <Icon icon={FaPlus} size="sm" />
+                  Add Person
+                </Button>
+              </>
+            }
+          >
             <PeopleList
               people={people}
               onEditClick={handleEditPersonClick}
@@ -420,6 +431,7 @@ export function GroupDetailClient({
         groupId={groupId}
         people={people}
         editPerson={editPerson}
+        onPersonAdded={handlePersonAdded}
       />
 
       {/* Group Modal (Edit) */}

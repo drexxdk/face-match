@@ -37,7 +37,7 @@ export function DuplicateGroupButton({ groupId }: { groupId: string }) {
       className="gap-2"
     >
       <Icon icon={FaCopy} size="sm" />
-      Duplicate
+      Duplicate Group
     </Button>
   );
 }

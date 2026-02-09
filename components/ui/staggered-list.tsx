@@ -93,6 +93,8 @@ export function StaggeredGridItem({ children, className }: StaggeredItemProps) {
   return (
     <motion.div
       layout
+      initial="hidden"
+      animate="visible"
       className={className}
       variants={{
         hidden: { opacity: 0, scale: 0.95 },

@@ -33,6 +33,7 @@ export const GroupsList = memo(function GroupsList({ groups }: GroupsListProps) 
   }, [setLoading]);
 
   const handleGroupCreated = () => {
+    // Modal handles navigation directly, just refresh the page data
     router.refresh();
   };
 

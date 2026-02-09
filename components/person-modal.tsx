@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useState, useRef, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { createClient, ensureValidSession } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,7 +10,7 @@ import { Listbox } from '@/components/ui/listbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import toast from 'react-hot-toast';
 import type { PersonInsert, GenderType, Person } from '@/lib/schemas';
-import { logError, getErrorMessage } from '@/lib/logger';
+import { logError, getErrorMessage, logger } from '@/lib/logger';
 import { sanitizeName, validateLength } from '@/lib/security';
 import { deletePersonImage } from '@/lib/game-utils';
 import { useNameValidation } from '@/lib/hooks/use-name-validation';
@@ -22,9 +22,10 @@ interface PersonModalProps {
   groupId: string;
   people: Person[];
   editPerson?: Person | null;
+  onPersonAdded?: (person: Person) => void;
 }
 
-export function PersonModal({ open, onOpenChange, groupId, people, editPerson }: PersonModalProps) {
+export function PersonModal({ open, onOpenChange, groupId, people, editPerson, onPersonAdded }: PersonModalProps) {
   const cropContainerRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
@@ -65,6 +66,14 @@ export function PersonModal({ open, onOpenChange, groupId, people, editPerson }:
     currentName: formData.name,
     excludePersonId: isEditMode ? editPerson?.id : undefined,
   });
+
+  // Check if form is valid
+  const trimmedName = formData.name.trim();
+  const isFormValid = 
+    trimmedName.length > 0 && 
+    trimmedName.length <= 100 && 
+    !duplicateError &&
+    (isEditMode || preview); // Require image for new people, but not when editing
 
   // Initialize form with edit data when modal opens in edit mode
   useEffect(() => {
@@ -314,6 +323,14 @@ export function PersonModal({ open, onOpenChange, groupId, people, editPerson }:
     try {
       const supabase = createClient();
 
+      // Ensure valid session before making authenticated requests
+      const { valid, session } = await ensureValidSession();
+      if (!valid || !session) {
+        toast.error('Your session has expired. Please refresh the page and log in again.');
+        setLoading(false);
+        return;
+      }
+
       let imageUrl = preview;
 
       // Upload new image if one was selected
@@ -375,26 +392,29 @@ export function PersonModal({ open, onOpenChange, groupId, people, editPerson }:
           personData.image_url = imageUrl;
         }
 
-        // Insert the person and get their ID back
-        const { data: newPerson, error: personError } = await supabase
+        // Insert the person - note: we can't use .select() here because the SELECT RLS policy
+        // requires the person to be linked to a group first, which hasn't happened yet
+        const { data: insertData, error: personError } = await supabase
           .from('people')
           .insert(personData)
-          .select()
+          .select('id')
           .single();
 
-        if (personError) {
-          throw new Error(`Failed to insert person: ${personError.message || JSON.stringify(personError)}`);
+        if (personError || !insertData) {
+          throw new Error(`Failed to insert person: ${personError?.message || 'No data returned'}`);
         }
+
+        const personId = insertData.id;
 
         // Link the person to the group via junction table
         const { error: linkError } = await supabase.from('group_people').insert({
           group_id: groupId,
-          person_id: newPerson.id,
+          person_id: personId,
         });
 
         if (linkError) {
           // If linking fails, we should delete the person we just created
-          await supabase.from('people').delete().eq('id', newPerson.id);
+          await supabase.from('people').delete().eq('id', personId);
           if (linkError.message.includes('row-level security')) {
             throw new Error(
               'Permission denied: RLS policy prevents linking person to group. In Supabase: Database → Tables → group_people → RLS toggle OFF (or create INSERT policy).',
@@ -403,7 +423,25 @@ export function PersonModal({ open, onOpenChange, groupId, people, editPerson }:
           throw linkError;
         }
 
+        // Now fetch the complete person record - SELECT RLS will pass because it's now linked
+        const { data: newPerson, error: fetchError } = await supabase
+          .from('people')
+          .select('*')
+          .eq('id', personId)
+          .single();
+
+        if (fetchError || !newPerson) {
+          // Person was created and linked successfully, but we couldn't fetch it
+          // This is not a critical error - the real-time subscription will handle it
+          logger.log('Person created but could not fetch back due to:', fetchError);
+        }
+
         toast.success(`${name} added!`);
+
+        // Call callback with new person data so parent can update immediately
+        if (onPersonAdded && newPerson) {
+          onPersonAdded(newPerson);
+        }
       }
 
       // Reset and close modal
@@ -416,8 +454,6 @@ export function PersonModal({ open, onOpenChange, groupId, people, editPerson }:
       setOriginalImage('');
       setShowCropper(false);
       onOpenChange(false);
-
-      // Let real-time subscription handle the update
     } catch (err: unknown) {
       logError(err);
       toast.error('Error: ' + getErrorMessage(err));
@@ -683,7 +719,7 @@ export function PersonModal({ open, onOpenChange, groupId, people, editPerson }:
                 type="submit"
                 loading={loading}
                 loadingText="Saving..."
-                disabled={!!duplicateError}
+                disabled={!isFormValid}
                 className="flex-1"
               >
                 {isEditMode ? 'Update Person' : 'Add Person'}

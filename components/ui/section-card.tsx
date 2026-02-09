@@ -6,18 +6,22 @@ interface SectionCardProps {
   description?: string;
   children: ReactNode;
   className?: string;
+  actions?: ReactNode;
 }
 
 /**
  * Reusable card component with consistent header spacing
  * Use for informational sections with title and content
  */
-export function SectionCard({ title, description, children, className }: SectionCardProps) {
+export function SectionCard({ title, description, children, className, actions }: SectionCardProps) {
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        {description && <CardDescription>{description}</CardDescription>}
+        <div>
+          <CardTitle>{title}</CardTitle>
+          {description && <CardDescription>{description}</CardDescription>}
+        </div>
+        {actions && <div className="mt-4 grid grid-cols-2 gap-2">{actions}</div>}
       </CardHeader>
       <CardContent className="pt-6">{children}</CardContent>
     </Card>
