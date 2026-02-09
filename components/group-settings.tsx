@@ -12,9 +12,14 @@ import type { Group } from '@/lib/schemas';
 
 interface GroupSettingsProps {
   groupId: string;
-  initialGroup: Pick<Group, 'id' | 'name' | 'time_limit_seconds' | 'options_count' | 'total_questions' | 'enable_timer'>;
+  initialGroup: Pick<
+    Group,
+    'id' | 'name' | 'time_limit_seconds' | 'options_count' | 'total_questions' | 'enable_timer'
+  >;
   peopleCount?: number;
-  onUpdate?: (updatedGroup: Pick<Group, 'name' | 'time_limit_seconds' | 'options_count' | 'total_questions' | 'enable_timer'>) => void;
+  onUpdate?: (
+    updatedGroup: Pick<Group, 'name' | 'time_limit_seconds' | 'options_count' | 'total_questions' | 'enable_timer'>,
+  ) => void;
   isEditing?: boolean;
   onEditChange?: (isEditing: boolean) => void;
 }
@@ -31,7 +36,9 @@ export const GroupSettings = memo(function GroupSettings({
   const [groupName, setGroupName] = useState<string>(initialGroup.name);
   const [timeLimitSeconds, setTimeLimitSeconds] = useState<number>(Number(initialGroup.time_limit_seconds) || 30);
   const [optionsCount, setOptionsCount] = useState<number>(Number(initialGroup.options_count) || 4);
-  const [totalQuestions, setTotalQuestions] = useState<number>(Number(initialGroup.total_questions) || Math.min(peopleCount, 10));
+  const [totalQuestions, setTotalQuestions] = useState<number>(
+    Number(initialGroup.total_questions) || Math.min(peopleCount, 10),
+  );
   const [enableTimer, setEnableTimer] = useState<boolean>(initialGroup.enable_timer ?? true);
   const [isSaving, setIsSaving] = useState(false);
 

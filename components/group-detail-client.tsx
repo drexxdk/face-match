@@ -188,7 +188,9 @@ export function GroupDetailClient({
 
   const hasEnoughPeople = people.length >= (updatedGroupData.options_count ?? 4);
 
-  const handleGroupUpdate = (updated: Pick<Group, 'name' | 'time_limit_seconds' | 'options_count' | 'total_questions' | 'enable_timer'>) => {
+  const handleGroupUpdate = (
+    updated: Pick<Group, 'name' | 'time_limit_seconds' | 'options_count' | 'total_questions' | 'enable_timer'>,
+  ) => {
     setUpdatedGroupData((prev) => ({
       ...prev,
       ...updated,
@@ -346,8 +348,8 @@ export function GroupDetailClient({
         </div>
 
         <div>
-          <SectionCard 
-            title="People" 
+          <SectionCard
+            title="People"
             description="Manage people in this group"
             actions={
               <>

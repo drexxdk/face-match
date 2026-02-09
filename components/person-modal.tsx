@@ -69,11 +69,7 @@ export function PersonModal({ open, onOpenChange, groupId, people, editPerson, o
 
   // Check if form is valid
   const trimmedName = formData.name.trim();
-  const isFormValid = 
-    trimmedName.length > 0 && 
-    trimmedName.length <= 100 && 
-    !duplicateError &&
-    (isEditMode || preview); // Require image for new people, but not when editing
+  const isFormValid = trimmedName.length > 0 && trimmedName.length <= 100 && !duplicateError && (isEditMode || preview); // Require image for new people, but not when editing
 
   // Initialize form with edit data when modal opens in edit mode
   useEffect(() => {
@@ -674,7 +670,9 @@ export function PersonModal({ open, onOpenChange, groupId, people, editPerson, o
             ) : (
               <div
                 className={`group flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-8 transition-all duration-200 ${
-                  dragActive ? 'border-primary bg-primary/10 scale-[1.02]' : 'border-input hover:border-primary hover:bg-primary/5 hover:scale-[1.02] hover:shadow-lg'
+                  dragActive
+                    ? 'border-primary bg-primary/10 scale-[1.02]'
+                    : 'border-input hover:border-primary hover:bg-primary/5 hover:scale-[1.02] hover:shadow-lg'
                 }`}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
@@ -689,7 +687,9 @@ export function PersonModal({ open, onOpenChange, groupId, people, editPerson, o
                   </>
                 ) : (
                   <>
-                    <p className="text-muted-foreground text-sm transition-colors group-hover:text-primary">Drag and drop an image here, or click to select</p>
+                    <p className="text-muted-foreground group-hover:text-primary text-sm transition-colors">
+                      Drag and drop an image here, or click to select
+                    </p>
                     <input
                       id="image-upload"
                       type="file"
@@ -697,7 +697,9 @@ export function PersonModal({ open, onOpenChange, groupId, people, editPerson, o
                       onChange={handleFileInputChange}
                       className="hidden"
                     />
-                    <p className="text-muted-foreground text-xs transition-colors group-hover:text-primary/70">JPEG or PNG, max 1MB</p>
+                    <p className="text-muted-foreground group-hover:text-primary/70 text-xs transition-colors">
+                      JPEG or PNG, max 1MB
+                    </p>
                   </>
                 )}
               </div>

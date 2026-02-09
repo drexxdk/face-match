@@ -19,7 +19,15 @@ interface GameStartedModalProps {
   isOnHostPage?: boolean;
 }
 
-export function GameStartedModal({ open, onOpenChange, gameCode, sessionId, groupId, groupName, isOnHostPage = false }: GameStartedModalProps) {
+export function GameStartedModal({
+  open,
+  onOpenChange,
+  gameCode,
+  sessionId,
+  groupId,
+  groupName,
+  isOnHostPage = false,
+}: GameStartedModalProps) {
   const [gameUrl, setGameUrl] = useState('');
 
   // Update game URL when modal opens (client-side only to avoid hydration issues)

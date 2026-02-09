@@ -14,16 +14,12 @@ type Group = {
  * @param excludeGroupId - Group ID to exclude (for edit mode)
  * @returns Object with duplicateError string
  */
-export function useGroupNameValidation(
-  groups: Group[],
-  currentName: string,
-  excludeGroupId?: string
-) {
+export function useGroupNameValidation(groups: Group[], currentName: string, excludeGroupId?: string) {
   const [duplicateError, setDuplicateError] = useState<string>('');
 
   useEffect(() => {
     const trimmedName = currentName.trim();
-    
+
     if (!trimmedName) {
       setDuplicateError('');
       return;
@@ -31,9 +27,7 @@ export function useGroupNameValidation(
 
     // Check for duplicate (case-insensitive)
     const duplicate = groups.find(
-      (group) =>
-        group.name.toLowerCase() === trimmedName.toLowerCase() &&
-        group.id !== excludeGroupId
+      (group) => group.name.toLowerCase() === trimmedName.toLowerCase() && group.id !== excludeGroupId,
     );
 
     if (duplicate) {

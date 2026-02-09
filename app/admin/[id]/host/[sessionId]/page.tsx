@@ -32,20 +32,20 @@ interface Player {
 
 function formatTimeAgo(timestamp: string | null): string {
   if (!timestamp) return 'Unknown';
-  
+
   const now = new Date();
   const startTime = new Date(timestamp);
   const diffMs = now.getTime() - startTime.getTime();
   const diffMins = Math.floor(diffMs / 60000);
-  
+
   if (diffMins < 1) return 'Just now';
   if (diffMins === 1) return '1 minute ago';
   if (diffMins < 60) return `${diffMins} minutes ago`;
-  
+
   const diffHours = Math.floor(diffMins / 60);
   if (diffHours === 1) return '1 hour ago';
   if (diffHours < 24) return `${diffHours} hours ago`;
-  
+
   const diffDays = Math.floor(diffHours / 24);
   if (diffDays === 1) return '1 day ago';
   return `${diffDays} days ago`;
@@ -53,7 +53,7 @@ function formatTimeAgo(timestamp: string | null): string {
 
 function formatFullTimestamp(timestamp: string | null): string {
   if (!timestamp) return 'Unknown time';
-  
+
   const date = new Date(timestamp);
   return date.toLocaleString('en-US', {
     weekday: 'long',
@@ -246,11 +246,7 @@ export default function GameControlPage({
 
       logger.log('Active players found:', activePlayers);
 
-      setPlayers(
-        activePlayers.length > 0
-          ? activePlayers
-          : [],
-      );
+      setPlayers(activePlayers.length > 0 ? activePlayers : []);
       setIsLoading(false);
       setLoading(false); // Reset global loading
     },
@@ -435,7 +431,7 @@ export default function GameControlPage({
             <div className="bg-muted rounded p-3">
               <p className="text-muted-foreground">Started</p>
               <Tooltip content={formatFullTimestamp(gameSession.started_at)}>
-                <div className="flex items-center gap-1.5 font-semibold cursor-help">
+                <div className="flex cursor-help items-center gap-1.5 font-semibold">
                   <Icon icon={FaClock} size="xs" />
                   <span>{formatTimeAgo(gameSession.started_at)}</span>
                 </div>

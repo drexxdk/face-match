@@ -18,7 +18,10 @@ import type { Group } from '@/lib/schemas';
 interface GroupModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  editGroup?: Pick<Group, 'id' | 'name' | 'time_limit_seconds' | 'options_count' | 'total_questions' | 'enable_timer'> | null;
+  editGroup?: Pick<
+    Group,
+    'id' | 'name' | 'time_limit_seconds' | 'options_count' | 'total_questions' | 'enable_timer'
+  > | null;
   onSuccess?: (groupId?: string) => void;
   peopleCount?: number;
 }
@@ -40,14 +43,13 @@ export function GroupModal({ open, onOpenChange, editGroup, onSuccess, peopleCou
   useEffect(() => {
     const fetchUserGroups = async () => {
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) return;
 
-      const { data, error } = await supabase
-        .from('groups')
-        .select('id, name')
-        .eq('creator_id', user.id);
+      const { data, error } = await supabase.from('groups').select('id, name').eq('creator_id', user.id);
 
       if (!error && data) {
         setUserGroups(data);
@@ -60,11 +62,7 @@ export function GroupModal({ open, onOpenChange, editGroup, onSuccess, peopleCou
   }, [open]);
 
   // Use the validation hook
-  const { duplicateError } = useGroupNameValidation(
-    userGroups,
-    formData.name,
-    editGroup?.id
-  );
+  const { duplicateError } = useGroupNameValidation(userGroups, formData.name, editGroup?.id);
 
   // Reset form when modal opens/closes or editGroup changes
   useEffect(() => {
@@ -148,7 +146,7 @@ export function GroupModal({ open, onOpenChange, editGroup, onSuccess, peopleCou
         if (insertError) throw insertError;
 
         toast.success('Group created successfully!');
-        
+
         // Navigate to the new group's manage page
         if (newGroup?.id) {
           setLoading(true);
@@ -198,9 +196,7 @@ export function GroupModal({ open, onOpenChange, editGroup, onSuccess, peopleCou
               required
               disabled={isSaving}
             />
-            {duplicateError && (
-              <p className="text-destructive text-sm">{duplicateError}</p>
-            )}
+            {duplicateError && <p className="text-destructive text-sm">{duplicateError}</p>}
           </div>
 
           <div className="flex items-center gap-3">
