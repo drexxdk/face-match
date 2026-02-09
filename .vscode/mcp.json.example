@@ -1,0 +1,12 @@
+{
+  "servers": {
+    "supabase": {
+      "command": "npx",
+      "args": ["-y", "@supabase/mcp-server-supabase@0.6.2"],
+      "env": {
+        "SUPABASE_URL": "your-supabase-project-url",
+        "SUPABASE_ACCESS_TOKEN": "your-service-role-key-here"
+      }
+    }
+  }
+}

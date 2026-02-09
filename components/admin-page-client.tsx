@@ -6,9 +6,6 @@ import {
   FaUserGroup,
   FaRightToBracket,
   FaFolder,
-  FaUser,
-  FaImage,
-  FaArrowUpRightFromSquare,
   FaPlus,
   FaGear,
 } from 'react-icons/fa6';
@@ -21,6 +18,7 @@ import { LoadingLink } from '@/components/ui/loading-link';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useLoading } from '@/lib/loading-context';
 import { GroupModal } from '@/components/group-modal';
+import { ActiveGamesModal } from '@/components/active-games-modal';
 
 interface GameSession {
   id: string;
@@ -50,6 +48,7 @@ export const AdminPageClient = memo(function AdminPageClient({ groups }: AdminPa
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [activeGamesModalGroup, setActiveGamesModalGroup] = useState<GroupWithGames | null>(null);
 
   // Check for create query param
   useEffect(() => {
@@ -139,74 +138,39 @@ export const AdminPageClient = memo(function AdminPageClient({ groups }: AdminPa
               return (
                 <Card key={group.id} variant="compact" className="flex flex-col">
                   <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2">
-                        <Icon icon={FaFolder} size="md" color="primary" />
-                        <CardTitle className="text-lg">{group.name}</CardTitle>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary" className="gap-1">
-                          <Icon icon={FaUserGroup} size="xs" />
-                          {peopleCount}
-                        </Badge>
-                        <LoadingLink
-                          href={`/admin/groups/${group.id}`}
-                          className={buttonVariants({ variant: 'outline', size: 'sm', className: 'shrink-0 gap-2' })}
-                        >
-                          <Icon icon={FaGear} size="xs" />
-                          Manage
-                        </LoadingLink>
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <Icon icon={FaFolder} size="md" color="primary" />
+                      <CardTitle className="text-lg">{group.name}</CardTitle>
+                      <Badge variant="secondary" className="ml-auto gap-1">
+                        <Icon icon={FaUserGroup} size="xs" />
+                        {peopleCount}
+                      </Badge>
                     </div>
                   </CardHeader>
                   <CardContent className="flex flex-col gap-3">
-                    {activeGamesCount > 0 ? (
-                      group.game_sessions.map((session) => (
-                        <div
-                          key={session.id}
-                          className="bg-primary/5 border-primary/10 flex flex-col gap-3 rounded-lg border p-3"
+                    <div className="flex gap-2">
+                      <LoadingLink
+                        href={`/admin/groups/${group.id}`}
+                        className={buttonVariants({ variant: 'outline', size: 'sm', className: 'flex-1 gap-2' })}
+                      >
+                        <Icon icon={FaGear} size="xs" />
+                        Manage
+                      </LoadingLink>
+                      {activeGamesCount > 0 ? (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => setActiveGamesModalGroup(group)}
                         >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              {session.game_type === 'guess_name' ? (
-                                <Icon icon={FaUser} size="sm" color="primary" />
-                              ) : (
-                                <Icon icon={FaImage} size="sm" color="primary" />
-                              )}
-                              <span className="text-sm font-medium">
-                                {session.game_type === 'guess_name' ? 'Name' : 'Face'}
-                              </span>
-                            </div>
-                            <Badge className="font-mono text-xs">{session.game_code || 'N/A'}</Badge>
-                          </div>
-                          <div className="grid grid-cols-3 gap-2">
-                            <div className="flex flex-col gap-0.5">
-                              <p className="text-muted-foreground text-xs">Timer</p>
-                              <p className="text-sm font-semibold">{session.time_limit_seconds || 30}s</p>
-                            </div>
-                            <div className="flex flex-col gap-0.5">
-                              <p className="text-muted-foreground text-xs">Options</p>
-                              <p className="text-sm font-semibold">{session.options_count || 4}</p>
-                            </div>
-                            <div className="flex flex-col gap-0.5">
-                              <p className="text-muted-foreground text-xs">Questions</p>
-                              <p className="text-sm font-semibold">{session.total_questions || 10}</p>
-                            </div>
-                          </div>
-                          <LoadingLink
-                            href={`/admin/groups/${group.id}/host/${session.id}/play`}
-                            className={buttonVariants({ size: 'sm', className: 'w-full gap-2' })}
-                          >
-                            <Icon icon={FaArrowUpRightFromSquare} size="xs" />
-                            Open Game
-                          </LoadingLink>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="py-4 text-center">
-                        <p className="text-muted-foreground text-sm">No active games</p>
-                      </div>
-                    )}
+                          Games ({activeGamesCount})
+                        </Button>
+                      ) : (
+                        <Button variant="secondary" size="sm" disabled className="flex-1">
+                          No Active Games
+                        </Button>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               );
@@ -229,6 +193,16 @@ export const AdminPageClient = memo(function AdminPageClient({ groups }: AdminPa
       />
 
       <GroupModal open={showCreateModal} onOpenChange={handleCreateModalChange} onSuccess={handleGroupCreated} />
+      
+      {activeGamesModalGroup && (
+        <ActiveGamesModal
+          open={!!activeGamesModalGroup}
+          onOpenChange={(open) => !open && setActiveGamesModalGroup(null)}
+          groupId={activeGamesModalGroup.id}
+          groupName={activeGamesModalGroup.name}
+          gameSessions={activeGamesModalGroup.game_sessions}
+        />
+      )}
     </div>
   );
 });

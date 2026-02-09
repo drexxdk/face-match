@@ -963,10 +963,10 @@ Jane Smith,female,`;
 
                 <div className="mt-3 flex gap-2">
                   <Button type="button" onClick={cancelCrop} variant="outline" className="flex-1">
-                    ✕ Change Image
+                    Cancel
                   </Button>
                   <Button type="button" onClick={applyCrop} className="flex-1">
-                    ✓ Use This Crop
+                    Apply Crop
                   </Button>
                 </div>
               </div>

@@ -18,10 +18,19 @@ export function ServiceWorkerRegistration() {
             if (newWorker) {
               newWorker.addEventListener('statechange', () => {
                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  // New content available, prompt user to refresh
-                  if (confirm('New version available! Reload to update?')) {
+                  // Check if running as PWA or on mobile
+                  const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+                  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                  
+                  if (isStandalone || isMobile) {
+                    // New content available, prompt user to refresh on PWA/mobile
+                    if (confirm('New version available! Reload to update?')) {
+                      newWorker.postMessage('skipWaiting');
+                      window.location.reload();
+                    }
+                  } else {
+                    // On desktop browser, silently update
                     newWorker.postMessage('skipWaiting');
-                    window.location.reload();
                   }
                 }
               });

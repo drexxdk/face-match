@@ -609,11 +609,11 @@ export function PersonModal({ open, onOpenChange, groupId, people, editPerson }:
                 </div>
 
                 <div className="flex gap-2">
-                  <Button type="button" onClick={applyCrop} className="flex-1">
-                    Apply Crop
-                  </Button>
                   <Button type="button" onClick={cancelCrop} variant="outline" className="flex-1">
                     Cancel
+                  </Button>
+                  <Button type="button" onClick={applyCrop} className="flex-1">
+                    Apply Crop
                   </Button>
                 </div>
               </div>
@@ -637,13 +637,14 @@ export function PersonModal({ open, onOpenChange, groupId, people, editPerson }:
               </div>
             ) : (
               <div
-                className={`flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-8 transition-colors ${
-                  dragActive ? 'border-primary bg-primary/5' : 'border-input'
+                className={`group flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-8 transition-all duration-200 ${
+                  dragActive ? 'border-primary bg-primary/10 scale-[1.02]' : 'border-input hover:border-primary hover:bg-primary/5 hover:scale-[1.02] hover:shadow-lg'
                 }`}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
+                onClick={() => !imageLoading && document.getElementById('image-upload')?.click()}
               >
                 {imageLoading ? (
                   <>
@@ -652,15 +653,7 @@ export function PersonModal({ open, onOpenChange, groupId, people, editPerson }:
                   </>
                 ) : (
                   <>
-                    <p className="text-muted-foreground text-sm">Drag and drop an image here, or</p>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={loading}
-                      onClick={() => document.getElementById('image-upload')?.click()}
-                    >
-                      Choose Image
-                    </Button>
+                    <p className="text-muted-foreground text-sm transition-colors group-hover:text-primary">Drag and drop an image here, or click to select</p>
                     <input
                       id="image-upload"
                       type="file"
@@ -668,27 +661,35 @@ export function PersonModal({ open, onOpenChange, groupId, people, editPerson }:
                       onChange={handleFileInputChange}
                       className="hidden"
                     />
-                    <p className="text-muted-foreground text-xs">JPEG or PNG, max 1MB</p>
+                    <p className="text-muted-foreground text-xs transition-colors group-hover:text-primary/70">JPEG or PNG, max 1MB</p>
                   </>
                 )}
               </div>
             )}
           </div>
 
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={loading}
-              className="flex-1"
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading || !!duplicateError} className="flex-1">
-              {loading ? 'Saving...' : isEditMode ? 'Update Person' : 'Add Person'}
-            </Button>
-          </div>
+          {!showCropper && (
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={loading}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                loading={loading}
+                loadingText="Saving..."
+                disabled={!!duplicateError}
+                className="flex-1"
+              >
+                {isEditMode ? 'Update Person' : 'Add Person'}
+              </Button>
+            </div>
+          )}
         </form>
       </DialogContent>
     </Dialog>

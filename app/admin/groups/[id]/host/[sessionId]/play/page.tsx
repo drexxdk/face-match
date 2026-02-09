@@ -60,7 +60,7 @@ export default function GameControlPage({
       // Get game session
       const { data: session } = await supabase
         .from('game_sessions')
-        .select('*, groups(*)')
+        .select('*, groups(*, group_people(count))')
         .eq('id', sessionId)
         .single();
 
@@ -78,6 +78,11 @@ export default function GameControlPage({
       const { data: answers } = await supabase.from('game_answers').select('*').eq('session_id', sessionId);
 
       logger.log('Fetched game_answers for sessionId', sessionId, ':', answers);
+
+      // Calculate total questions: use session value, or fallback to people count, or 10 as last resort
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const peopleCount = (session.groups as any)?.group_people?.[0]?.count ?? 10;
+      const totalQuestions = session.total_questions ?? peopleCount;
 
       // Count occurrences of each player name (only join records where correct_option_id is null)
       // Sort by created_at to maintain join order
@@ -186,7 +191,6 @@ export default function GameControlPage({
         })),
       );
 
-      const totalQuestions = session.total_questions ?? 10;
       const activePlayers: Player[] = Array.from(playerStats.entries()).map(([, stats]) => {
         const total = stats.correct + stats.wrong;
         const missing = Math.max(0, totalQuestions - total);
@@ -207,17 +211,7 @@ export default function GameControlPage({
       setPlayers(
         activePlayers.length > 0
           ? activePlayers
-          : [
-              {
-                id: '1',
-                name: 'Waiting for players...',
-                correct: 0,
-                wrong: 0,
-                missing: 0,
-                answered: false,
-                isActive: false,
-              },
-            ],
+          : [],
       );
       setIsLoading(false);
       setLoading(false); // Reset global loading
@@ -415,35 +409,41 @@ export default function GameControlPage({
           <CardTitle>Players ({players.length})</CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
-          <div className="space-y-2">
-            {players.map((player) => (
-              <div key={player.id} className="bg-muted flex items-center justify-between gap-3 rounded-lg p-3">
-                <div className="flex items-center gap-3 overflow-hidden text-ellipsis whitespace-nowrap">
-                  <div
-                    className={`h-3 w-3 shrink-0 rounded-full ${player.isActive ? 'bg-green-500' : 'bg-gray-300'}`}
-                  />
-                  <span className="overflow-hidden font-medium text-ellipsis whitespace-nowrap">{player.name}</span>
+          {players.length === 0 ? (
+            <div className="bg-muted text-muted-foreground flex items-center justify-center rounded-lg p-8 text-center">
+              <p>Waiting for players...</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {players.map((player) => (
+                <div key={player.id} className="bg-muted flex items-center justify-between gap-3 rounded-lg p-3">
+                  <div className="flex items-center gap-3 overflow-hidden text-ellipsis whitespace-nowrap">
+                    <div
+                      className={`h-3 w-3 shrink-0 rounded-full ${player.isActive ? 'bg-green-500' : 'bg-gray-300'}`}
+                    />
+                    <span className="overflow-hidden font-medium text-ellipsis whitespace-nowrap">{player.name}</span>
+                  </div>
+                  <div className="text-muted-foreground shrink-0 space-x-2 text-sm">
+                    {player.correct > 0 && (
+                      <Badge variant="default" className="bg-green-600 hover:bg-green-600">
+                        {player.correct} correct
+                      </Badge>
+                    )}
+                    {player.wrong > 0 && (
+                      <Badge variant="destructive" className="hover:bg-destructive">
+                        {player.wrong} wrong
+                      </Badge>
+                    )}
+                    {player.missing > 0 && (
+                      <Badge variant="secondary" className="hover:bg-secondary">
+                        {player.missing} missing
+                      </Badge>
+                    )}
+                  </div>
                 </div>
-                <div className="text-muted-foreground shrink-0 space-x-2 text-sm">
-                  {player.correct > 0 && (
-                    <Badge variant="default" className="bg-green-600 hover:bg-green-600">
-                      {player.correct} correct
-                    </Badge>
-                  )}
-                  {player.wrong > 0 && (
-                    <Badge variant="destructive" className="hover:bg-destructive">
-                      {player.wrong} wrong
-                    </Badge>
-                  )}
-                  {player.missing > 0 && (
-                    <Badge variant="secondary" className="hover:bg-secondary">
-                      {player.missing} missing
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 

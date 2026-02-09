@@ -318,7 +318,7 @@ export default function GamePlayPage() {
 
       // Use options_count from game session (set when host started the game)
       const optionsCount = session.options_count ?? 4;
-      const totalQuestions = session.total_questions ?? 10;
+      const totalQuestions = session.total_questions ?? peopleData.length;
 
       const generatedQuestions = generateQuestions(peopleData, session.game_type, totalQuestions, optionsCount);
       logger.log(

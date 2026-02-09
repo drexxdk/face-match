@@ -611,10 +611,10 @@ export function AddPersonForm({ groupId, people = [] }: { groupId: string; peopl
 
               <div className="mt-3 flex gap-2">
                 <Button type="button" onClick={cancelCrop} variant="outline" className="flex-1">
-                  ✕ Change Image
+                  Cancel
                 </Button>
                 <Button type="button" onClick={applyCrop} className="flex-1">
-                  ✓ Use This Crop
+                  Apply Crop
                 </Button>
               </div>
             </div>
@@ -625,10 +625,10 @@ export function AddPersonForm({ groupId, people = [] }: { groupId: string; peopl
               onDragLeave={handleDrag}
               onDragOver={handleDrag}
               onDrop={handleDrop}
-              className={`relative cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
+              className={`group relative cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-all duration-200 ${
                 dragActive
-                  ? 'border-primary bg-primary/5'
-                  : 'border-muted-foreground/25 hover:border-muted-foreground/50'
+                  ? 'border-primary bg-primary/10 scale-[1.02]'
+                  : 'border-muted-foreground/25 hover:border-primary hover:bg-primary/5 hover:scale-[1.02] hover:shadow-lg'
               }`}
             >
               <input
@@ -653,8 +653,8 @@ export function AddPersonForm({ groupId, people = [] }: { groupId: string; peopl
                 </div>
               ) : (
                 <div className="flex flex-col gap-2 py-8" suppressHydrationWarning>
-                  <p className="text-sm font-medium">Drag and drop an image here</p>
-                  <p className="text-muted-foreground text-xs">or click to select from your device</p>
+                  <p className="text-sm font-medium transition-colors group-hover:text-primary">Drag and drop an image here</p>
+                  <p className="text-muted-foreground text-xs transition-colors group-hover:text-primary/70">or click to select from your device</p>
                 </div>
               )}
             </div>

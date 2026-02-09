@@ -71,7 +71,7 @@ export default function GameHostPage({ params }: { params: Promise<{ id: string 
       setEnableTimer(group.enable_timer ?? true);
       setTimeLimitSeconds(group.time_limit_seconds || 30);
       setOptionsCount(group.options_count || 4);
-      setTotalQuestions(Math.min((peopleData || []).length || 1, 10));
+      setTotalQuestions((peopleData || []).length || 1);
     } catch (error) {
       logError('Error loading group data:', error);
     } finally {

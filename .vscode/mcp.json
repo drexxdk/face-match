@@ -1,7 +1,12 @@
 {
   "servers": {
     "supabase": {
-      "url": "https://mcp.supabase.com/mcp"
+      "command": "npx",
+      "args": ["-y", "@supabase/mcp-server-supabase@0.6.2"],
+      "env": {
+        "SUPABASE_URL": "https://qnrfvlkhriwsqopmjpnn.supabase.co",
+        "SUPABASE_ACCESS_TOKEN": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFucmZ2bGtocml3c3FvcG1qcG5uIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDExODM4NCwiZXhwIjoyMDg1Njk0Mzg0fQ.CEOgyoSpm8yqOHYR2mUv2FIcolcMtn-0yfcdQMgcP60"
+      }
     }
   }
 }
