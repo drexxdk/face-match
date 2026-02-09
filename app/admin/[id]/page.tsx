@@ -19,7 +19,7 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
   const { data: groupData } = await supabase.from('groups').select('*').eq('id', id).eq('creator_id', user.id).single();
 
   if (!groupData) {
-    return redirect('/admin/groups');
+    return redirect('/admin');
   }
 
   // Get people in this group

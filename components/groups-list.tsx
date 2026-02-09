@@ -96,14 +96,14 @@ export const GroupsList = memo(function GroupsList({ groups }: GroupsListProps) 
                     </CardHeader>
                     <CardContent className="mt-auto flex gap-2 p-0">
                       <LoadingLink
-                        href={`/admin/groups/${group.id}/host`}
+                        href={`/admin/${group.id}/host`}
                         className={buttonVariants({ className: 'flex-1 gap-2 group-hover:shadow-md' })}
                       >
                         <Icon icon={FaPlay} size="sm" />
                         Start Game
                       </LoadingLink>
                       <LoadingLink
-                        href={`/admin/groups/${group.id}`}
+                        href={`/admin/${group.id}`}
                         className={buttonVariants({
                           variant: 'outline',
                           className: 'flex-1 gap-2',

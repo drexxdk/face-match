@@ -166,7 +166,7 @@ export function GroupDetailClient({
   // Update share URL when share code changes (client-side only to avoid hydration issues)
   useEffect(() => {
     if (shareCode && typeof window !== 'undefined') {
-      setShareUrl(`${window.location.origin}/admin/groups/import?code=${shareCode}`);
+      setShareUrl(`${window.location.origin}/admin/import?code=${shareCode}`);
     }
   }, [shareCode]);
 
@@ -223,7 +223,7 @@ export function GroupDetailClient({
 
   const copyShareUrl = () => {
     if (shareCode) {
-      const url = `${window.location.origin}/admin/groups/import?code=${shareCode}`;
+      const url = `${window.location.origin}/admin/import?code=${shareCode}`;
       navigator.clipboard.writeText(url);
       toast.success('Share link copied!');
     }
@@ -299,7 +299,7 @@ export function GroupDetailClient({
               {/* Start Game - Primary Action */}
               <div>
                 <LoadingLink
-                  href={`/admin/groups/${updatedGroupData.id}/host`}
+                  href={`/admin/${updatedGroupData.id}/host`}
                   className={buttonVariants({
                     size: 'lg',
                     className: `w-full gap-2 ${!hasEnoughPeople ? 'pointer-events-none opacity-50' : ''}`,

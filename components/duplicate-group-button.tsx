@@ -19,7 +19,7 @@ export function DuplicateGroupButton({ groupId }: { groupId: string }) {
 
       if (result.success && result.newGroupId) {
         toast.success('Group duplicated successfully!');
-        router.push(`/admin/groups/${result.newGroupId}`);
+        router.push(`/admin/${result.newGroupId}`);
       } else {
         toast.error(result.error || 'Failed to duplicate group');
       }

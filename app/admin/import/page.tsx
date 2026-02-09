@@ -101,7 +101,7 @@ export default function ImportGroupPage() {
       // Check if user is logged in
       if (!user) {
         // Redirect to login with return URL
-        router.push(`/auth/login?redirect=/admin/groups/import?code=${shareCode}`);
+        router.push(`/auth/login?redirect=/admin/import?code=${shareCode}`);
         return;
       }
 

@@ -128,7 +128,7 @@ export function ActiveGamesModal({ open, onOpenChange, groupId, groupName, gameS
               </div>
               <div className="flex gap-2">
                 <LoadingLink
-                  href={`/admin/groups/${groupId}/host/${session.id}/play`}
+                  href={`/admin/${groupId}/host/${session.id}`}
                   className={buttonVariants({ variant: 'secondary', className: 'flex-1 gap-2' })}
                 >
                   <Icon icon={FaGear} size="sm" />

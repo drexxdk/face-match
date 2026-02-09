@@ -90,7 +90,7 @@ export function GameStartedModal({ open, onOpenChange, gameCode, sessionId, grou
         {/* Actions */}
         <div className="flex flex-col gap-3 pt-4 sm:flex-row">
           <LoadingLink
-            href={`/admin/groups/${groupId}/host/${sessionId}/play`}
+            href={`/admin/${groupId}/host/${sessionId}`}
             className={buttonVariants({ variant: 'outline', className: 'flex flex-1 items-center gap-2' })}
           >
             <Icon icon={FaChartLine} size="sm" />

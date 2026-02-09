@@ -150,7 +150,7 @@ export const AdminPageClient = memo(function AdminPageClient({ groups }: AdminPa
                   <CardContent className="flex flex-col gap-3">
                     <div className="flex gap-2">
                       <LoadingLink
-                        href={`/admin/groups/${group.id}`}
+                        href={`/admin/${group.id}`}
                         className={buttonVariants({ variant: 'outline', size: 'sm', className: 'flex-1 gap-2' })}
                       >
                         <Icon icon={FaGear} size="xs" />
