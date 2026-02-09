@@ -12,14 +12,9 @@ import type { Group } from '@/lib/schemas';
 
 interface GroupSettingsProps {
   groupId: string;
-  initialGroup: Pick<
-    Group,
-    'id' | 'name' | 'time_limit_seconds' | 'options_count' | 'enable_timer'
-  >;
+  initialGroup: Pick<Group, 'id' | 'name' | 'time_limit_seconds' | 'options_count' | 'enable_timer'>;
   peopleCount?: number;
-  onUpdate?: (
-    updatedGroup: Pick<Group, 'name' | 'time_limit_seconds' | 'options_count' | 'enable_timer'>,
-  ) => void;
+  onUpdate?: (updatedGroup: Pick<Group, 'name' | 'time_limit_seconds' | 'options_count' | 'enable_timer'>) => void;
   isEditing?: boolean;
   onEditChange?: (isEditing: boolean) => void;
 }

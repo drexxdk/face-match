@@ -329,10 +329,12 @@ export type GameSession = z.infer<typeof gameSessionSchema>;
 // GameSession with group details (for joined queries)
 export const gameSessionWithGroupSchema = z.object({
   ...publicGameSessionsRowSchema.shape,
-  groups: z.object({
-    id: z.string(),
-    name: z.string(),
-  }).nullable(),
+  groups: z
+    .object({
+      id: z.string(),
+      name: z.string(),
+    })
+    .nullable(),
 });
 export type GameSessionWithGroup = z.infer<typeof gameSessionWithGroupSchema>;
 

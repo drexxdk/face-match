@@ -18,10 +18,7 @@ import type { Group } from '@/lib/schemas';
 interface GroupModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  editGroup?: Pick<
-    Group,
-    'id' | 'name' | 'time_limit_seconds' | 'options_count' | 'enable_timer'
-  > | null;
+  editGroup?: Pick<Group, 'id' | 'name' | 'time_limit_seconds' | 'options_count' | 'enable_timer'> | null;
   onSuccess?: (groupId?: string) => void;
   peopleCount?: number;
 }
