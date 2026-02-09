@@ -14,7 +14,7 @@ export const IMAGE_UPLOAD_CONFIG = {
  */
 export function validateImageFile(file: File): boolean {
   // Check file type
-  if (!IMAGE_UPLOAD_CONFIG.VALID_TYPES.includes(file.type)) {
+  if (!IMAGE_UPLOAD_CONFIG.VALID_TYPES.includes(file.type as 'image/jpeg' | 'image/png')) {
     toast.error('Please select a JPEG or PNG image');
     return false;
   }
@@ -34,5 +34,5 @@ export function validateImageFile(file: File): boolean {
  * @returns true if valid image type
  */
 export function isValidImageType(type: string): boolean {
-  return IMAGE_UPLOAD_CONFIG.VALID_TYPES.includes(type);
+  return IMAGE_UPLOAD_CONFIG.VALID_TYPES.includes(type as 'image/jpeg' | 'image/png');
 }

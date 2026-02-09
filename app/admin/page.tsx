@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { AdminPageClient } from '@/components/admin-page-client';
-import type { GameSessionWithGroup } from '@/lib/schemas';
 
 export default async function AdminPage() {
   const supabase = await createClient();
@@ -14,17 +13,37 @@ export default async function AdminPage() {
     redirect('/auth/login');
   }
 
-  // Get user's active game sessions
-  const { data: sessions } = await supabase
-    .from('game_sessions')
-    .select('*, groups(id, name)')
-    .eq('user_id', user.id)
-    .eq('status', 'active')
-    .order('started_at', { ascending: false })
-    .limit(3);
+  // Get all user's groups with people count and game sessions
+  const { data: groups } = await supabase
+    .from('groups')
+    .select(
+      `
+      id,
+      name,
+      created_at,
+      group_people(count),
+      game_sessions(
+        id,
+        game_code,
+        game_type,
+        time_limit_seconds,
+        options_count,
+        total_questions,
+        started_at,
+        status
+      )
+    `,
+    )
+    .eq('creator_id', user.id)
+    .order('created_at', { ascending: false });
 
-  const activeSessions = sessions || [];
+  // Filter game sessions to only active ones
+  const groupsWithData = (groups || []).map((group) => ({
+    ...group,
+    game_sessions: (group.game_sessions || []).filter(
+      (session) => session.status === 'active',
+    ),
+  }));
 
-  // Cast to GameSessionWithGroup[] to include enable_timer field (for backward compatibility with DB)
-  return <AdminPageClient activeSessions={activeSessions as unknown as GameSessionWithGroup[]} />;
+  return <AdminPageClient groups={groupsWithData} />;
 }

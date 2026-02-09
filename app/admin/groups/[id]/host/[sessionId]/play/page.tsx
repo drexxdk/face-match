@@ -8,11 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { InfoListCard } from '@/components/ui/section-card';
 import { Badge } from '@/components/ui/badge';
 import { ErrorMessage } from '@/components/ui/error-message';
+import { Icon } from '@/components/ui/icon';
 import { endGameSession } from '@/lib/game-utils';
 import { useLoading } from '@/lib/loading-context';
 import { LoadingLink } from '@/components/ui/loading-link';
+import { GameStartedModal } from '@/components/game-started-modal';
 import { logger } from '@/lib/logger';
 import { use } from 'react';
+import { FaUserGroup, FaShareNodes, FaPlay, FaUser, FaImage } from 'react-icons/fa6';
 import type { GameSessionWithGroup } from '@/lib/schemas';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
@@ -33,6 +36,7 @@ export default function GameControlPage({
 }) {
   const params = use(paramsPromise);
   const sessionId = params.sessionId;
+  const groupId = params.id;
   const router = useRouter();
   const { setLoading } = useLoading();
   const [isLoading, setIsLoading] = useState(true);
@@ -40,6 +44,7 @@ export default function GameControlPage({
   const [gameSession, setGameSession] = useState<GameSessionWithGroup | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [gameCode, setGameCode] = useState('');
+  const [showShareModal, setShowShareModal] = useState(false);
 
   // Track online players via Presence (Set of joinRecordIds)
   const onlinePlayerIdsRef = useRef<Set<string>>(new Set());
@@ -338,23 +343,52 @@ export default function GameControlPage({
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Header */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-2xl">{gameSession.groups?.name || 'Game Session'}</CardTitle>
-            <Badge className="px-4 py-2 font-mono text-lg">{gameCode}</Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
-            <div className="bg-muted rounded p-3">
-              <p className="text-muted-foreground">Type</p>
-              <p className="font-semibold">
-                {gameSession.game_type === 'guess_name' ? 'Guess the Name' : 'Guess the Face'}
-              </p>
+    <div className="flex flex-col gap-6">
+      {/* Hero Header */}
+      <Card variant="flush">
+        <div className="relative overflow-hidden">
+          <div className="from-primary/10 absolute inset-0 bg-linear-to-br via-purple-500/10 to-pink-500/10" />
+          <div className="relative flex items-start justify-between gap-6 p-8">
+            <div className="flex items-start gap-6">
+              <div className="from-primary flex size-16 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br to-purple-600 shadow-lg">
+                <Icon icon={FaPlay} size="xl" color="white" />
+              </div>
+              <div>
+                <h1 className="mb-2 text-3xl font-bold">{gameSession.groups?.name || 'Game Session'}</h1>
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <Icon icon={gameSession.game_type === 'guess_name' ? FaUser : FaImage} size="md" color="primary" />
+                    <p className="text-muted-foreground text-lg">
+                      <span className="text-foreground font-semibold">
+                        {gameSession.game_type === 'guess_name' ? 'Guess the Name' : 'Guess the Face'}
+                      </span>
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Icon icon={FaUserGroup} size="md" color="primary" />
+                    <p className="text-muted-foreground text-lg">
+                      <span className="text-foreground font-semibold">{players.length}</span>{' '}
+                      {players.length === 1 ? 'player' : 'players'}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
+            <Button onClick={() => setShowShareModal(true)} variant="default" size="lg" className="shrink-0 gap-2">
+              <Icon icon={FaShareNodes} size="md" />
+              Share
+            </Button>
+          </div>
+        </div>
+      </Card>
+
+      {/* Game Info */}
+      <Card variant="compact">
+        <CardHeader>
+          <CardTitle>Game Settings</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
             <div className="bg-muted rounded p-3">
               <p className="text-muted-foreground">Time Limit</p>
               <p className="font-semibold">{gameSession.time_limit_seconds || 30}s</p>
@@ -367,26 +401,16 @@ export default function GameControlPage({
               <p className="text-muted-foreground">Questions</p>
               <p className="font-semibold">{gameSession.total_questions}</p>
             </div>
-          </div>
-          <div className="flex flex-wrap gap-4">
-            <Button onClick={endGame} variant="destructive" className="flex-1">
-              End Game
-            </Button>
-            <LoadingLink
-              href="/admin"
-              className={buttonVariants({
-                variant: 'outline',
-                className: 'flex-1',
-              })}
-            >
-              Back to Dashboard
-            </LoadingLink>
+            <div className="bg-muted rounded p-3">
+              <p className="text-muted-foreground">Status</p>
+              <p className="font-semibold text-green-600">Active</p>
+            </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Players List */}
-      <Card>
+      <Card variant="compact">
         <CardHeader>
           <CardTitle>Players ({players.length})</CardTitle>
         </CardHeader>
@@ -423,16 +447,42 @@ export default function GameControlPage({
         </CardContent>
       </Card>
 
+      {/* Actions */}
+      <Card variant="compact">
+        <CardContent className="flex flex-wrap gap-4 pt-6">
+          <Button onClick={endGame} variant="destructive" className="flex-1">
+            End Game
+          </Button>
+          <LoadingLink
+            href="/admin"
+            className={buttonVariants({
+              variant: 'outline',
+              className: 'flex-1',
+            })}
+          >
+            Back to Dashboard
+          </LoadingLink>
+        </CardContent>
+      </Card>
+
       <InfoListCard
         title="How to Play"
         items={[
-          `Share the game code ${gameCode} with players`,
-          'Players visit your-app.com/game/join and enter the code',
+          `Click the "Share" button above to view and share the game code`,
+          'Players visit the join page and enter the code',
           'Players will see questions and answer in real-time',
           'Monitor player progress from this dashboard',
           'Click "End Game" when everyone is done',
         ]}
         ordered={true}
+      />
+
+      <GameStartedModal
+        open={showShareModal}
+        onOpenChange={setShowShareModal}
+        gameCode={gameCode}
+        sessionId={sessionId}
+        groupId={groupId}
       />
     </div>
   );

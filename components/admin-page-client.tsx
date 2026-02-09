@@ -1,35 +1,80 @@
 'use client';
 
-import { useEffect, memo } from 'react';
+import { useEffect, useState, memo } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   FaUserGroup,
   FaRightToBracket,
   FaFolder,
-  FaPlay,
   FaUser,
   FaImage,
   FaArrowUpRightFromSquare,
+  FaPlus,
+  FaGear,
 } from 'react-icons/fa6';
-import { buttonVariants } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
 import { InfoListCard } from '@/components/ui/section-card';
 import { LoadingLink } from '@/components/ui/loading-link';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useLoading } from '@/lib/loading-context';
-import type { GameSessionWithGroup } from '@/lib/schemas';
+import { GroupModal } from '@/components/group-modal';
 
-interface AdminPageClientProps {
-  activeSessions: GameSessionWithGroup[];
+interface GameSession {
+  id: string;
+  game_code: string | null;
+  game_type: 'guess_name' | 'guess_face' | 'guess_image';
+  time_limit_seconds: number | null;
+  options_count: number | null;
+  total_questions: number | null;
+  started_at: string | null;
+  status: string | null;
 }
 
-export const AdminPageClient = memo(function AdminPageClient({ activeSessions }: AdminPageClientProps) {
+interface GroupWithGames {
+  id: string;
+  name: string;
+  created_at: string | null;
+  group_people?: { count: number }[];
+  game_sessions: GameSession[];
+}
+
+interface AdminPageClientProps {
+  groups: GroupWithGames[];
+}
+
+export const AdminPageClient = memo(function AdminPageClient({ groups }: AdminPageClientProps) {
   const { setLoading } = useLoading();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  // Check for create query param
+  useEffect(() => {
+    const create = searchParams.get('create');
+    if (create === 'true') {
+      setShowCreateModal(true);
+    }
+  }, [searchParams]);
 
   // Reset loading state when page mounts
   useEffect(() => {
     setLoading(false);
   }, [setLoading]);
+
+  const handleGroupCreated = () => {
+    router.push('/admin');
+    router.refresh();
+  };
+
+  const handleCreateModalChange = (open: boolean) => {
+    setShowCreateModal(open);
+    if (!open) {
+      router.push('/admin');
+    }
+  };
 
   return (
     <div className="flex w-full flex-1 flex-col gap-12">
@@ -51,80 +96,121 @@ export const AdminPageClient = memo(function AdminPageClient({ activeSessions }:
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
+              <Button onClick={() => setShowCreateModal(true)} size="lg" className="gap-2">
+                <Icon icon={FaPlus} size="md" />
+                Create Group
+              </Button>
               <LoadingLink href="/game/join" className={buttonVariants({ size: 'lg', className: 'gap-2' })}>
                 <Icon icon={FaRightToBracket} size="md" />
                 Join Game
-              </LoadingLink>
-              <LoadingLink
-                href="/admin/groups"
-                className={buttonVariants({ variant: 'secondary', size: 'lg', className: 'gap-2' })}
-              >
-                <Icon icon={FaFolder} size="md" />
-                My Groups
               </LoadingLink>
             </div>
           </div>
         </div>
       </Card>
 
-      {/* Active Games Section */}
-      {activeSessions.length > 0 && (
+      {/* Groups Section */}
+      {!groups || groups.length === 0 ? (
+        <EmptyState
+          icon={<Icon icon={FaUserGroup} size="xl" />}
+          title="No groups yet"
+          description="Create your first group to help people get to know each other through an icebreaker game"
+          action={
+            <Button onClick={() => setShowCreateModal(true)} size="lg">
+              Create Your First Group
+            </Button>
+          }
+        />
+      ) : (
         <div>
           <div className="mb-6 flex items-center gap-3">
             <div className="bg-primary/20 flex size-10 items-center justify-center rounded-lg">
-              <Icon icon={FaPlay} size="lg" color="primary" />
+              <Icon icon={FaFolder} size="lg" color="primary" />
             </div>
             <div>
-              <h2 className="text-2xl font-semibold">Your Active Games</h2>
-              <p className="text-muted-foreground text-sm">Continue hosting your live game sessions</p>
+              <h2 className="text-2xl font-semibold">Your Groups</h2>
+              <p className="text-muted-foreground text-sm">Manage your groups and active game sessions</p>
             </div>
           </div>
-          <div className="grid gap-4 md:grid-cols-3">
-            {activeSessions.map((session: GameSessionWithGroup) => (
-              <Card key={session.id} variant="compact" hover className="group">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      {session.game_type === 'guess_name' ? (
-                        <Icon icon={FaUser} size="md" color="primary" />
-                      ) : (
-                        <Icon icon={FaImage} size="md" color="primary" />
-                      )}
-                      <CardTitle className="text-base">{session.groups?.name || 'Unknown'}</CardTitle>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {groups.map((group) => {
+              const peopleCount = group.group_people?.at(0)?.count ?? 0;
+              const activeGamesCount = group.game_sessions.length;
+              return (
+                <Card key={group.id} variant="compact" className="flex flex-col">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <Icon icon={FaFolder} size="md" color="primary" />
+                        <CardTitle className="text-lg">{group.name}</CardTitle>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary" className="gap-1">
+                          <Icon icon={FaUserGroup} size="xs" />
+                          {peopleCount}
+                        </Badge>
+                        <LoadingLink
+                          href={`/admin/groups/${group.id}`}
+                          className={buttonVariants({ variant: 'outline', size: 'sm', className: 'shrink-0 gap-2' })}
+                        >
+                          <Icon icon={FaGear} size="xs" />
+                          Manage
+                        </LoadingLink>
+                      </div>
                     </div>
-                    <Badge className="font-mono text-xs">{session.game_code}</Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="flex flex-col gap-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-primary/5 border-primary/10 flex flex-col gap-1 rounded-lg border p-2.5">
-                      <p className="text-muted-foreground text-xs font-medium">Type</p>
-                      <p className="text-sm font-semibold">{session.game_type === 'guess_name' ? 'Name' : 'Face'}</p>
-                    </div>
-                    <div className="bg-primary/5 border-primary/10 flex flex-col gap-1 rounded-lg border p-2.5">
-                      <p className="text-muted-foreground text-xs font-medium">Timer</p>
-                      <p className="text-sm font-semibold">{session.time_limit_seconds || 30}s</p>
-                    </div>
-                    <div className="bg-primary/5 border-primary/10 flex flex-col gap-1 rounded-lg border p-2.5">
-                      <p className="text-muted-foreground text-xs font-medium">Options</p>
-                      <p className="text-sm font-semibold">{session.options_count || 4}</p>
-                    </div>
-                    <div className="bg-primary/5 border-primary/10 flex flex-col gap-1 rounded-lg border p-2.5">
-                      <p className="text-muted-foreground text-xs font-medium">Questions</p>
-                      <p className="text-sm font-semibold">{session.total_questions}</p>
-                    </div>
-                  </div>
-
-                  <LoadingLink
-                    href={`/admin/groups/${session.groups?.id}/host/${session.id}/play`}
-                    className={buttonVariants({ className: 'w-full gap-2 group-hover:shadow-lg' })}
-                  >
-                    <Icon icon={FaArrowUpRightFromSquare} size="sm" />
-                    Open Game
-                  </LoadingLink>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardHeader>
+                  <CardContent className="flex flex-col gap-3">
+                    {activeGamesCount > 0 ? (
+                      group.game_sessions.map((session) => (
+                        <div
+                          key={session.id}
+                          className="bg-primary/5 border-primary/10 flex flex-col gap-3 rounded-lg border p-3"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              {session.game_type === 'guess_name' ? (
+                                <Icon icon={FaUser} size="sm" color="primary" />
+                              ) : (
+                                <Icon icon={FaImage} size="sm" color="primary" />
+                              )}
+                              <span className="text-sm font-medium">
+                                {session.game_type === 'guess_name' ? 'Name' : 'Face'}
+                              </span>
+                            </div>
+                            <Badge className="font-mono text-xs">{session.game_code || 'N/A'}</Badge>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2">
+                            <div className="flex flex-col gap-0.5">
+                              <p className="text-muted-foreground text-xs">Timer</p>
+                              <p className="text-sm font-semibold">{session.time_limit_seconds || 30}s</p>
+                            </div>
+                            <div className="flex flex-col gap-0.5">
+                              <p className="text-muted-foreground text-xs">Options</p>
+                              <p className="text-sm font-semibold">{session.options_count || 4}</p>
+                            </div>
+                            <div className="flex flex-col gap-0.5">
+                              <p className="text-muted-foreground text-xs">Questions</p>
+                              <p className="text-sm font-semibold">{session.total_questions || 10}</p>
+                            </div>
+                          </div>
+                          <LoadingLink
+                            href={`/admin/groups/${group.id}/host/${session.id}/play`}
+                            className={buttonVariants({ size: 'sm', className: 'w-full gap-2' })}
+                          >
+                            <Icon icon={FaArrowUpRightFromSquare} size="xs" />
+                            Open Game
+                          </LoadingLink>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="py-4 text-center">
+                        <p className="text-muted-foreground text-sm">No active games</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
       )}
@@ -141,6 +227,8 @@ export const AdminPageClient = memo(function AdminPageClient({ activeSessions }:
         ordered={true}
         className="md:col-span-2"
       />
+
+      <GroupModal open={showCreateModal} onOpenChange={handleCreateModalChange} onSuccess={handleGroupCreated} />
     </div>
   );
 });
