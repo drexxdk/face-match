@@ -4,26 +4,24 @@
  * ==========================================
  */
 
-import { z } from 'zod';
-
-export const publicGameTypeSchema = z.union([z.literal('guess_name'), z.literal('guess_image')]);
-
-export const publicGenderTypeSchema = z.union([z.literal('male'), z.literal('female'), z.literal('other')]);
-
-export const publicUserRoleSchema = z.union([z.literal('teacher'), z.literal('student')]);
-
-export const jsonSchema = z.lazy(
-  (): z.ZodType<unknown> =>
-    z
-      .union([
-        z.string(),
-        z.number(),
-        z.boolean(),
-        z.record(z.string(), z.union([jsonSchema, z.undefined()])),
-        z.array(jsonSchema),
-      ])
-      .nullable(),
+import { z } from "zod";
+export const jsonSchema: z.ZodType<unknown> = z.lazy(() =>
+  z
+    .union([
+      z.string(),
+      z.number(),
+      z.boolean(),
+      z.record(z.string(), z.union([jsonSchema, z.undefined()])),
+      z.array(jsonSchema),
+    ])
+    .nullable(),
 );
+
+export const publicGameTypeSchema = z.union([z.literal("guess_name"), z.literal("guess_image")]);
+
+export const publicGenderTypeSchema = z.union([z.literal("male"), z.literal("female"), z.literal("other")]);
+
+export const publicUserRoleSchema = z.union([z.literal("teacher"), z.literal("student")]);
 
 export const publicGameAnswersRowSchema = z.object({
   answered_at: z.string().nullable(),
@@ -72,25 +70,25 @@ export const publicGameAnswersUpdateSchema = z.object({
 
 export const publicGameAnswersRelationshipsSchema = z.tuple([
   z.object({
-    foreignKeyName: z.literal('game_answers_correct_option_id_fkey'),
-    columns: z.tuple([z.literal('correct_option_id')]),
+    foreignKeyName: z.literal("game_answers_correct_option_id_fkey"),
+    columns: z.tuple([z.literal("correct_option_id")]),
     isOneToOne: z.literal(false),
-    referencedRelation: z.literal('people'),
-    referencedColumns: z.tuple([z.literal('id')]),
+    referencedRelation: z.literal("people"),
+    referencedColumns: z.tuple([z.literal("id")]),
   }),
   z.object({
-    foreignKeyName: z.literal('game_answers_selected_option_id_fkey'),
-    columns: z.tuple([z.literal('selected_option_id')]),
+    foreignKeyName: z.literal("game_answers_selected_option_id_fkey"),
+    columns: z.tuple([z.literal("selected_option_id")]),
     isOneToOne: z.literal(false),
-    referencedRelation: z.literal('people'),
-    referencedColumns: z.tuple([z.literal('id')]),
+    referencedRelation: z.literal("people"),
+    referencedColumns: z.tuple([z.literal("id")]),
   }),
   z.object({
-    foreignKeyName: z.literal('game_answers_session_id_fkey'),
-    columns: z.tuple([z.literal('session_id')]),
+    foreignKeyName: z.literal("game_answers_session_id_fkey"),
+    columns: z.tuple([z.literal("session_id")]),
     isOneToOne: z.literal(false),
-    referencedRelation: z.literal('game_sessions'),
-    referencedColumns: z.tuple([z.literal('id')]),
+    referencedRelation: z.literal("game_sessions"),
+    referencedColumns: z.tuple([z.literal("id")]),
   }),
 ]);
 
@@ -144,11 +142,11 @@ export const publicGameSessionsUpdateSchema = z.object({
 
 export const publicGameSessionsRelationshipsSchema = z.tuple([
   z.object({
-    foreignKeyName: z.literal('game_sessions_group_id_fkey'),
-    columns: z.tuple([z.literal('group_id')]),
+    foreignKeyName: z.literal("game_sessions_group_id_fkey"),
+    columns: z.tuple([z.literal("group_id")]),
     isOneToOne: z.literal(false),
-    referencedRelation: z.literal('groups'),
-    referencedColumns: z.tuple([z.literal('id')]),
+    referencedRelation: z.literal("groups"),
+    referencedColumns: z.tuple([z.literal("id")]),
   }),
 ]);
 
@@ -175,18 +173,18 @@ export const publicGroupPeopleUpdateSchema = z.object({
 
 export const publicGroupPeopleRelationshipsSchema = z.tuple([
   z.object({
-    foreignKeyName: z.literal('group_people_group_id_fkey'),
-    columns: z.tuple([z.literal('group_id')]),
+    foreignKeyName: z.literal("group_people_group_id_fkey"),
+    columns: z.tuple([z.literal("group_id")]),
     isOneToOne: z.literal(false),
-    referencedRelation: z.literal('groups'),
-    referencedColumns: z.tuple([z.literal('id')]),
+    referencedRelation: z.literal("groups"),
+    referencedColumns: z.tuple([z.literal("id")]),
   }),
   z.object({
-    foreignKeyName: z.literal('group_people_person_id_fkey'),
-    columns: z.tuple([z.literal('person_id')]),
+    foreignKeyName: z.literal("group_people_person_id_fkey"),
+    columns: z.tuple([z.literal("person_id")]),
     isOneToOne: z.literal(false),
-    referencedRelation: z.literal('people'),
-    referencedColumns: z.tuple([z.literal('id')]),
+    referencedRelation: z.literal("people"),
+    referencedColumns: z.tuple([z.literal("id")]),
   }),
 ]);
 
@@ -290,34 +288,6 @@ export const publicGenerateGameCodeArgsSchema = z.never();
 
 export const publicGenerateGameCodeReturnsSchema = z.string();
 
-export type PublicGameType = z.infer<typeof publicGameTypeSchema>;
-export type PublicGenderType = z.infer<typeof publicGenderTypeSchema>;
-export type PublicUserRole = z.infer<typeof publicUserRoleSchema>;
-export type Json = z.infer<typeof jsonSchema>;
-export type PublicGameAnswersRow = z.infer<typeof publicGameAnswersRowSchema>;
-export type PublicGameAnswersInsert = z.infer<typeof publicGameAnswersInsertSchema>;
-export type PublicGameAnswersUpdate = z.infer<typeof publicGameAnswersUpdateSchema>;
-export type PublicGameAnswersRelationships = z.infer<typeof publicGameAnswersRelationshipsSchema>;
-export type PublicGameSessionsRow = z.infer<typeof publicGameSessionsRowSchema>;
-export type PublicGameSessionsInsert = z.infer<typeof publicGameSessionsInsertSchema>;
-export type PublicGameSessionsUpdate = z.infer<typeof publicGameSessionsUpdateSchema>;
-export type PublicGameSessionsRelationships = z.infer<typeof publicGameSessionsRelationshipsSchema>;
-export type PublicGroupPeopleRow = z.infer<typeof publicGroupPeopleRowSchema>;
-export type PublicGroupPeopleInsert = z.infer<typeof publicGroupPeopleInsertSchema>;
-export type PublicGroupPeopleUpdate = z.infer<typeof publicGroupPeopleUpdateSchema>;
-export type PublicGroupPeopleRelationships = z.infer<typeof publicGroupPeopleRelationshipsSchema>;
-export type PublicGroupsRow = z.infer<typeof publicGroupsRowSchema>;
-export type PublicGroupsInsert = z.infer<typeof publicGroupsInsertSchema>;
-export type PublicGroupsUpdate = z.infer<typeof publicGroupsUpdateSchema>;
-export type PublicPeopleRow = z.infer<typeof publicPeopleRowSchema>;
-export type PublicPeopleInsert = z.infer<typeof publicPeopleInsertSchema>;
-export type PublicPeopleUpdate = z.infer<typeof publicPeopleUpdateSchema>;
-export type PublicProfilesRow = z.infer<typeof publicProfilesRowSchema>;
-export type PublicProfilesInsert = z.infer<typeof publicProfilesInsertSchema>;
-export type PublicProfilesUpdate = z.infer<typeof publicProfilesUpdateSchema>;
-export type PublicGenerateGameCodeArgs = z.infer<typeof publicGenerateGameCodeArgsSchema>;
-export type PublicGenerateGameCodeReturns = z.infer<typeof publicGenerateGameCodeReturnsSchema>;
-
 // =============================
 // Custom Schemas for Queries
 // =============================
@@ -357,14 +327,14 @@ export function parseOrNull<T>(schema: z.ZodType<T>, data: unknown): T | null {
 export function parseArrayFiltered<T>(schema: z.ZodType<T>, data: unknown): T[] {
   if (!Array.isArray(data)) return [];
   return data
-    .map((item) => {
+    .map((item: unknown): T | null => {
       const result = schema.safeParse(item);
       return result.success ? result.data : null;
     })
-    .filter(Boolean) as T[];
+    .filter((item: T | null): item is T => item !== null);
 }
 
 // Aliases for compatibility with existing imports
-export type GameType = PublicGameType;
-export type PersonInsert = PublicPeopleInsert;
-export type GenderType = PublicGenderType;
+export type GameType = z.infer<typeof publicGameTypeSchema>;
+export type PersonInsert = z.infer<typeof publicPeopleInsertSchema>;
+export type GenderType = z.infer<typeof publicGenderTypeSchema>;

@@ -11,7 +11,8 @@
     "test:coverage": "jest --coverage",
     "prepare": "husky",
     "supabase-login": "npx -y supabase@latest login",
-    "supabase-generate-types": "npx -y supabase@latest gen types typescript --project-id face-match --schema public > lib/supabase.types.ts"
+    "supabase-generate-types": "npx -y supabase@latest gen types typescript --project-id face-match --schema public > lib/supabase.types.ts",
+    "generate-schemas": "npx tsx scripts/generate-schemas.ts"
   },
   "dependencies": {
     "@floating-ui/react": "^0.27.17",
