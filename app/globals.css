@@ -48,22 +48,22 @@
 
   /* Enhanced Typography Hierarchy */
   h1 {
-    @apply text-4xl font-bold tracking-tight leading-tight;
+    @apply text-4xl leading-tight font-bold tracking-tight;
   }
   h2 {
-    @apply text-3xl font-bold tracking-tight leading-tight;
+    @apply text-3xl leading-tight font-bold tracking-tight;
   }
   h3 {
-    @apply text-2xl font-semibold tracking-tight leading-snug;
+    @apply text-2xl leading-snug font-semibold tracking-tight;
   }
   h4 {
-    @apply text-xl font-semibold tracking-tight leading-snug;
+    @apply text-xl leading-snug font-semibold tracking-tight;
   }
   h5 {
-    @apply text-lg font-medium tracking-tight leading-normal;
+    @apply text-lg leading-normal font-medium tracking-tight;
   }
   h6 {
-    @apply text-base font-medium tracking-tight leading-normal;
+    @apply text-base leading-normal font-medium tracking-tight;
   }
 
   /* Body text hierarchy */
@@ -81,15 +81,15 @@
 
   /* Display text for hero sections */
   .text-display-lg {
-    @apply text-5xl font-bold tracking-tight leading-tight;
+    @apply text-5xl leading-tight font-bold tracking-tight;
   }
 
   .text-display-md {
-    @apply text-4xl font-bold tracking-tight leading-tight;
+    @apply text-4xl leading-tight font-bold tracking-tight;
   }
 
   .text-display-sm {
-    @apply text-3xl font-bold tracking-tight leading-tight;
+    @apply text-3xl leading-tight font-bold tracking-tight;
   }
 
   /* Focus improvements for accessibility */
@@ -236,27 +236,29 @@
 
   /* Glassmorphism utilities */
   .glass {
-    @apply bg-card/70 backdrop-blur-md border border-white/10;
+    @apply bg-card/70 border border-white/10 backdrop-blur-md;
   }
 
   .glass-strong {
-    @apply bg-card/80 backdrop-blur-lg border border-white/20;
+    @apply bg-card/80 border border-white/20 backdrop-blur-lg;
   }
 
   .glass-subtle {
-    @apply bg-card/60 backdrop-blur-sm border border-white/5;
+    @apply bg-card/60 border border-white/5 backdrop-blur-sm;
   }
 
   /* Gradient borders for glassmorphism */
   .border-gradient {
-    background: linear-gradient(135deg, hsl(262 83% 58% / 0.2), hsl(217 91% 60% / 0.2)) padding-box,
-                linear-gradient(135deg, hsl(262 83% 58% / 0.5), hsl(217 91% 60% / 0.5)) border-box;
+    background:
+      linear-gradient(135deg, hsl(262 83% 58% / 0.2), hsl(217 91% 60% / 0.2)) padding-box,
+      linear-gradient(135deg, hsl(262 83% 58% / 0.5), hsl(217 91% 60% / 0.5)) border-box;
     border: 1px solid transparent;
   }
 
   .border-gradient-subtle {
-    background: linear-gradient(135deg, hsl(240 10% 20%), hsl(240 10% 15%)) padding-box,
-                linear-gradient(135deg, hsl(262 83% 58% / 0.1), hsl(217 91% 60% / 0.1)) border-box;
+    background:
+      linear-gradient(135deg, hsl(240 10% 20%), hsl(240 10% 15%)) padding-box,
+      linear-gradient(135deg, hsl(262 83% 58% / 0.1), hsl(217 91% 60% / 0.1)) border-box;
     border: 1px solid transparent;
   }
 

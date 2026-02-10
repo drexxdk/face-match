@@ -1,5 +1,5 @@
-import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
+import * as React from 'react';
 
 import { cn } from '@/lib/utils';
 
@@ -37,7 +37,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(({ className, variant, 
   // Enhanced variant gets gradient border wrapper
   if (effectiveVariant === 'enhanced') {
     return (
-      <div className="from-primary/20 to-secondary/20 relative rounded-glass-lg bg-linear-to-br via-transparent p-[1px]">
+      <div className="from-primary/20 to-secondary/20 rounded-glass-lg relative bg-linear-to-br via-transparent p-[1px]">
         <div ref={ref} className={cn(cardVariants({ variant: effectiveVariant, hover }), className)} {...props} />
       </div>
     );
@@ -76,4 +76,4 @@ const CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
 );
 CardFooter.displayName = 'CardFooter';
 
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent, cardVariants };
+export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, cardVariants };

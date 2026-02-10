@@ -93,13 +93,13 @@ export const AnswerOptions = memo(function AnswerOptions({
               </span>
             </Button>
             {answered && gameType === 'guess_image' && (
-              <div className="pointer-events-none absolute inset-0 flex items-center justify-center glass-subtle rounded-glass">
+              <div className="glass-subtle rounded-glass pointer-events-none absolute inset-0 flex items-center justify-center">
                 {isCorrect ? (
-                  <div className="rounded-full border-4 border-white bg-green-500 p-4 shadow-glass">
+                  <div className="shadow-glass rounded-full border-4 border-white bg-green-500 p-4">
                     <FaCheck className="h-8 w-8 text-white" />
                   </div>
                 ) : isSelected ? (
-                  <div className="rounded-full border-4 border-white bg-red-500 p-4 shadow-glass">
+                  <div className="shadow-glass rounded-full border-4 border-white bg-red-500 p-4">
                     <FaXmark className="h-8 w-8 text-white" />
                   </div>
                 ) : null}
