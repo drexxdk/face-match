@@ -43,7 +43,7 @@ export const AnswerOptions = memo(function AnswerOptions({
         const isCorrect = option.id === correctPersonId;
 
         let buttonClass =
-          'text-lg font-semibold disabled:opacity-100 relative overflow-hidden bg-card/70 backdrop-blur-lg border border-primary/10 shadow-3xl rounded-xl transition-all duration-300 hover:bg-card/90 hover:border-primary/20 hover:scale-[1.02]';
+          'text-lg font-semibold disabled:opacity-100 relative overflow-hidden glass-strong border-gradient-subtle shadow-glass rounded-glass transition-all duration-300 hover:bg-card/90 hover:border-primary/20 hover:scale-[1.02] hover:shadow-glass';
         const buttonVariant: 'default' | 'outline' = 'default';
 
         if (answered) {
@@ -93,13 +93,13 @@ export const AnswerOptions = memo(function AnswerOptions({
               </span>
             </Button>
             {answered && gameType === 'guess_image' && (
-              <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-xl bg-black/50">
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center glass-subtle rounded-glass">
                 {isCorrect ? (
-                  <div className="rounded-full border-4 border-white bg-green-500 p-4 shadow-2xl">
+                  <div className="rounded-full border-4 border-white bg-green-500 p-4 shadow-glass">
                     <FaCheck className="h-8 w-8 text-white" />
                   </div>
                 ) : isSelected ? (
-                  <div className="rounded-full border-4 border-white bg-red-500 p-4 shadow-2xl">
+                  <div className="rounded-full border-4 border-white bg-red-500 p-4 shadow-glass">
                     <FaXmark className="h-8 w-8 text-white" />
                   </div>
                 ) : null}

@@ -4,18 +4,18 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const cardVariants = cva(
-  'border-border/50 bg-gradient-card text-card-foreground relative flex flex-col rounded-xl border shadow-lg transition-all duration-300',
+  'border-border/50 bg-gradient-card text-card-foreground relative flex flex-col rounded-glass border shadow-glass transition-all duration-300',
   {
     variants: {
       variant: {
-        default: 'p-6 gap-4 backdrop-blur-sm',
-        compact: 'p-4 gap-3 backdrop-blur-sm',
-        flush: 'p-0 gap-0 overflow-hidden',
-        glass: 'p-6 gap-4 bg-card/70 backdrop-blur-md',
-        enhanced: 'p-6 gap-4 bg-card/70 backdrop-blur-lg border-primary/10 shadow-3xl',
+        default: 'p-6 gap-4 glass-subtle',
+        compact: 'p-4 gap-3 glass-subtle',
+        flush: 'p-0 gap-0 overflow-hidden rounded-glass',
+        glass: 'p-6 gap-4 glass',
+        enhanced: 'p-6 gap-4 glass-strong border-gradient-subtle shadow-glass-lg',
       },
       hover: {
-        true: 'hover:border-primary/40 cursor-pointer hover:scale-[1.02] hover:shadow-3xl hover:shadow-primary/10 hover:bg-card/90',
+        true: 'hover:border-primary/40 cursor-pointer hover:scale-[1.02] hover:shadow-glass-lg hover:shadow-primary/10 hover:bg-card/90',
         false: '',
       },
     },
@@ -37,7 +37,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(({ className, variant, 
   // Enhanced variant gets gradient border wrapper
   if (effectiveVariant === 'enhanced') {
     return (
-      <div className="from-primary/20 to-secondary/20 relative rounded-2xl bg-linear-to-br via-transparent p-[1px]">
+      <div className="from-primary/20 to-secondary/20 relative rounded-glass-lg bg-linear-to-br via-transparent p-[1px]">
         <div ref={ref} className={cn(cardVariants({ variant: effectiveVariant, hover }), className)} {...props} />
       </div>
     );
