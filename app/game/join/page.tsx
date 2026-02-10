@@ -108,7 +108,7 @@ export default function JoinGamePage() {
   );
 
   return (
-    <div className="relative flex grow flex-col items-center gap-2 p-4">
+    <div className="relative flex grow flex-col items-center justify-center gap-2 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold">Join Game</CardTitle>

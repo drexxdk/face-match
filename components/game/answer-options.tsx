@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { memo } from 'react';
+import { cn } from '@/lib/utils';
 
 interface AnswerOption {
   id: string;
@@ -31,9 +32,10 @@ export const AnswerOptions = memo(function AnswerOptions({
 }: AnswerOptionsProps) {
   return (
     <div
-      className={`flex-1 justify-center gap-2 ${
+      className={cn(
+        'flex-1 justify-center gap-2',
         gameType === 'guess_image' ? 'grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))]' : 'flex flex-col'
-      }`}
+      )}
     >
       {options.map((option, index) => {
         const isSelected = selectedAnswer === option.id;

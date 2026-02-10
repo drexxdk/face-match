@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Confetti } from '@/components/ui/confetti';
 import { sound } from '@/lib/sounds';
 import { createClient } from '@/lib/supabase/client';
+import { cn } from '@/lib/utils';
 
 import { logger, logError } from '@/lib/logger';
 import { useRealtimeSubscription, getPayloadNew } from '@/lib/hooks/use-realtime';
@@ -239,23 +240,23 @@ export default function GameResultsPage() {
       return {
         emoji: '🌟',
         text: 'You Know Everyone!',
-        color: 'text-yellow-500',
+        color: 'text-game-neutral',
       };
-    if (percentage >= 75) return { emoji: '🎉', text: 'Great Memory!', color: 'text-green-500' };
-    if (percentage >= 60) return { emoji: '👍', text: 'Getting There!', color: 'text-blue-500' };
-    if (percentage >= 40) return { emoji: '📚', text: 'Learning!', color: 'text-orange-500' };
-    return { emoji: '💪', text: 'Keep Learning!', color: 'text-red-500' };
+    if (percentage >= 75) return { emoji: '🎉', text: 'Great Memory!', color: 'text-game-correct' };
+    if (percentage >= 60) return { emoji: '👍', text: 'Getting There!', color: 'text-game-info' };
+    if (percentage >= 40) return { emoji: '📚', text: 'Learning!', color: 'text-game-warning' };
+    return { emoji: '💪', text: 'Keep Learning!', color: 'text-game-incorrect' };
   };
 
   const grade = getGrade();
 
   return (
-    <div className="relative flex grow flex-col items-center p-4">
+    <div className="relative flex grow flex-col items-center justify-center p-4">
       {percentage >= 75 && <Confetti />}
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mt-8 mb-4 text-6xl">{grade.emoji}</div>
-          <CardTitle className={`text-4xl font-bold ${grade.color}`}>{grade.text}</CardTitle>
+          <CardTitle className={cn('text-4xl font-bold', grade.color)}>{grade.text}</CardTitle>
           <CardDescription className="mt-2 text-lg">
             You know {score} out of {total} people
           </CardDescription>
@@ -268,30 +269,30 @@ export default function GameResultsPage() {
 
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
-              <div className="text-2xl font-bold text-green-600">{score}</div>
+              <div className="text-game-correct text-2xl font-bold">{score}</div>
               <p className="text-muted-foreground text-sm">Correct</p>
             </div>
             <div>
-              <div className="text-2xl font-bold text-red-600">{total - score}</div>
+              <div className="text-game-incorrect text-2xl font-bold">{total - score}</div>
               <p className="text-muted-foreground text-sm">Wrong</p>
             </div>
             <div>
-              <div className="text-2xl font-bold text-blue-600">{total}</div>
+              <div className="text-game-info text-2xl font-bold">{total}</div>
               <p className="text-muted-foreground text-sm">Total</p>
             </div>
           </div>
 
           {total - score > 0 && (
-            <div className="rounded-lg border border-purple-200 bg-linear-to-r from-purple-50 to-pink-50 p-4">
-              <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-900">
+            <div className="border-brand-primary/20 from-brand-primary/10 to-brand-tertiary/10 rounded-lg border bg-linear-to-r p-4">
+              <h3 className="text-foreground mb-2 flex items-center gap-2 text-sm font-semibold">
                 <span>💬</span>
                 Keep the Conversation Going!
               </h3>
-              <p className="mb-2 text-xs text-gray-700">
+              <p className="text-muted-foreground mb-2 text-xs">
                 Great opportunity to connect with {total - score > 1 ? 'the people' : 'the person'} you didn&apos;t
                 recognize:
               </p>
-              <ul className="flex flex-col gap-1 text-xs text-gray-700">
+              <ul className="text-muted-foreground flex flex-col gap-1 text-xs">
                 <li>• Introduce yourself and share something interesting about you</li>
                 <li>• Ask about their hobbies or background</li>
                 <li>• Find common interests or connections</li>
@@ -301,12 +302,12 @@ export default function GameResultsPage() {
           )}
 
           {score === total && total > 0 && (
-            <div className="rounded-lg border border-green-200 bg-linear-to-r from-green-50 to-emerald-50 p-4">
-              <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-900">
+            <div className="border-game-correct/20 from-game-correct/10 to-game-correct/5 rounded-lg border bg-linear-to-r p-4">
+              <h3 className="text-foreground mb-2 flex items-center gap-2 text-sm font-semibold">
                 <span>🌟</span>
                 You&apos;re a Connection Pro!
               </h3>
-              <p className="text-xs text-gray-700">
+              <p className="text-muted-foreground text-xs">
                 Now that you know everyone, help others feel welcome! Introduce people who don&apos;t know each other
                 and share fun facts you&apos;ve learned.
               </p>

@@ -6,7 +6,7 @@ import { ErrorBoundaryWrapper } from '@/components/error-boundary-wrapper';
 
 export default function GameLayout({ children }: { children: React.ReactNode }) {
   return (
-    <main className="flex min-h-screen flex-col overflow-hidden bg-linear-to-br from-purple-500 to-pink-500">
+    <main className="from-brand-primary to-brand-tertiary flex min-h-screen flex-col overflow-hidden bg-linear-to-br">
       <Header />
       <LoadingProvider>
         <Suspense fallback={<LoadingOverlay />}>

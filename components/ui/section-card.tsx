@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ReactNode } from 'react';
+import { cn } from '@/lib/utils';
 
 interface SectionCardProps {
   title: string;
@@ -46,7 +47,7 @@ export function InfoListCard({ title, description, items, ordered = false, class
 
   return (
     <SectionCard title={title} description={description} className={className}>
-      <ListComponent className={`${listClass} text-muted-foreground list-inside space-y-2 text-sm`}>
+      <ListComponent className={cn(listClass, 'text-muted-foreground list-inside space-y-2 text-sm')}>
         {items.map((item, index) => (
           <li key={index}>{item}</li>
         ))}

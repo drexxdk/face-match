@@ -676,11 +676,7 @@ export default function GamePlayPage() {
 }
 
 const Container = ({ children, className }: { children: React.ReactNode; className?: string }) => {
-  return (
-    <div className="w-full max-w-5xl">
-      <div className={cn('w-full max-w-5xl', className)}>{children}</div>
-    </div>
-  );
+  return <div className={cn('w-full max-w-5xl', className)}>{children}</div>;
 };
 
 const Message = ({ text }: { text: string }) => {
@@ -784,11 +780,11 @@ function ActiveGameState({ state }: { state: ActiveState }) {
     <div
       ref={containerRef}
       className={cn(
-        'flex grow flex-col items-center gap-2 bg-linear-to-br p-4 transition-colors duration-700',
+        'flex grow flex-col items-center gap-2 bg-linear-to-br p-4',
         state.lastAnswerCorrect === true
-          ? 'from-green-600 to-green-800'
+          ? 'from-game-correct to-game-correct/80'
           : state.lastAnswerCorrect === false
-            ? 'from-red-600 to-red-800'
+            ? 'from-game-incorrect to-game-incorrect/80'
             : '',
       )}
       role="main"
@@ -837,9 +833,9 @@ function ActiveGameState({ state }: { state: ActiveState }) {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: '-100%', opacity: 0 }}
             transition={{ duration: 0.5, ease: 'easeInOut' }}
-            className="min-h-125 w-full"
+            className="w-full"
           >
-            <div className={`flex gap-6 ${state.gameType === 'guess_image' ? 'flex-col' : 'flex-col lg:flex-row'}`}>
+            <div className={cn('flex gap-6', state.gameType === 'guess_image' ? 'flex-col' : 'flex-col lg:flex-row')}>
               <Card className="shrink-0 justify-center">
                 <CardHeader>
                   <CardTitle className="text-center text-2xl">
@@ -866,7 +862,10 @@ function ActiveGameState({ state }: { state: ActiveState }) {
               </Card>
               {/* Question Options */}
               <div
-                className={`flex-1 justify-center gap-2 ${state.gameType === 'guess_image' ? 'grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))]' : 'flex flex-col'}`}
+                className={cn(
+                  'flex-1 justify-center gap-2',
+                  state.gameType === 'guess_image' ? 'grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))]' : 'flex flex-col'
+                )}
               >
                 {state.question.options.map((option) => {
                   const isSelected = state.selectedAnswer === option.id;
@@ -877,13 +876,13 @@ function ActiveGameState({ state }: { state: ActiveState }) {
 
                   if (state.answered) {
                     if (isCorrect && isSelected) {
-                      buttonClass += ' bg-green-500 hover:bg-green-500 text-white border-green-500 animate-pulse';
+                      buttonClass += ' bg-game-correct hover:bg-game-correct text-white border-game-correct';
                       buttonVariant = 'default';
                     } else if (isSelected && !isCorrect) {
-                      buttonClass += ' bg-red-500 hover:bg-red-500 text-white border-red-500';
+                      buttonClass += ' bg-game-incorrect hover:bg-game-incorrect text-white border-game-incorrect';
                       buttonVariant = 'default';
                     } else if (isCorrect) {
-                      buttonClass += ' bg-green-500 hover:bg-green-500 text-white border-green-500';
+                      buttonClass += ' bg-game-correct hover:bg-game-correct text-white border-game-correct';
                       buttonVariant = 'default';
                     }
                   }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { cn } from '@/lib/utils';
 
 export function OnlineStatus() {
   const [isOnline, setIsOnline] = useState(true);
@@ -43,7 +44,7 @@ export function OnlineStatus() {
             color: 'white',
           }}
         >
-          <div className={`size-2 rounded-full ${isOnline ? 'bg-green-200' : 'bg-red-200'}`} />
+          <div className={cn('size-2 rounded-full', isOnline ? 'bg-game-correct' : 'bg-game-incorrect')} />
           <span className="text-sm font-medium">{isOnline ? 'Back online' : 'No internet connection'}</span>
         </div>
       )}

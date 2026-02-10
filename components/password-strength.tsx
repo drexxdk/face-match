@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { cn } from '@/lib/utils';
 
 interface PasswordStrength {
   score: number; // 0-4
@@ -170,9 +171,7 @@ export function PasswordStrengthMeter({ password, showFeedback = true }: Passwor
         {[0, 1, 2, 3, 4].map((level) => (
           <div
             key={level}
-            className={`h-1.5 flex-1 rounded-full transition-colors ${
-              level <= strength.score ? strength.color : 'bg-muted'
-            }`}
+            className={cn('h-1.5 flex-1 rounded-full transition-colors', level <= strength.score ? strength.color : 'bg-muted')}
           />
         ))}
       </div>
@@ -181,9 +180,10 @@ export function PasswordStrengthMeter({ password, showFeedback = true }: Passwor
       <div className="flex items-center justify-between text-xs">
         <span className="text-muted-foreground">Password strength:</span>
         <span
-          className={`font-medium ${
-            strength.score <= 1 ? 'text-destructive' : strength.score === 2 ? 'text-yellow-500' : 'text-green-500'
-          }`}
+          className={cn(
+            'font-medium',
+            strength.score <= 1 ? 'text-destructive' : strength.score === 2 ? 'text-game-neutral' : 'text-game-correct'
+          )}
         >
           {strength.label}
         </span>

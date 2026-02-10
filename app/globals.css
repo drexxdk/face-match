@@ -8,6 +8,13 @@
   --color-brand-secondary: hsl(217 91% 60%); /* Blue - secondary accent */
   --color-brand-tertiary: hsl(340 82% 52%); /* Pink - tertiary accent */
 
+  /* Game State Colors */
+  --color-game-correct: hsl(142 76% 36%); /* Green - correct answers */
+  --color-game-incorrect: hsl(0 72% 51%); /* Red - incorrect answers */
+  --color-game-neutral: hsl(38 92% 50%); /* Yellow - neutral/highlights */
+  --color-game-info: hsl(217 91% 60%); /* Blue - informational */
+  --color-game-warning: hsl(25 95% 53%); /* Orange - warnings */
+
   /* Semantic Colors - shadcn/ui style */
   --color-background: hsl(240 10% 3.9%);
   --color-foreground: hsl(0 0% 98%);

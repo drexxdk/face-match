@@ -27,3 +27,16 @@
 - Use `mcp_io_github_ups_resolve-library-id` to find the correct library ID
 - Use `mcp_io_github_ups_get-library-docs` to fetch documentation and examples
 - Prioritize libraries with High source reputation and high benchmark scores
+
+### Tailwind CSS & Theming
+
+- **Define CSS variables in `app/globals.css`** using the `@theme` directive for Tailwind v4 compatibility
+- Use semantic color names (e.g., `--color-brand-primary`, `--color-game-correct`) for consistent theming
+- Avoid extending colors in `tailwind.config.ts` - rely on `@theme` definitions for automatic class generation
+- Follow established color schemes: brand colors for primary UI, game colors for state-specific elements
+
+### Code Style & Utilities
+
+- **Use the `cn` utility function** from `@/lib/utils` for combining className strings, especially when merging conditional classes or Tailwind utilities
+- Prefer `cn()` over string concatenation or array joins for className props
+- Import `cn` as needed: `import { cn } from '@/lib/utils'`
