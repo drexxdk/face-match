@@ -108,14 +108,14 @@ export default function JoinGamePage() {
   );
 
   return (
-    <div className="flex grow items-center justify-center p-4">
-      <Card className="m-4 flex w-full max-w-md flex-col gap-6">
+    <div className="relative flex grow flex-col items-center gap-2 p-4">
+      <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold">Join Game</CardTitle>
           <CardDescription>Enter the game code to join the fun!</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleJoin} className="flex flex-col gap-4" suppressHydrationWarning>
+          <form onSubmit={handleJoin} className="flex flex-col gap-6" suppressHydrationWarning>
             <Input
               placeholder="Game Code"
               value={gameCode}

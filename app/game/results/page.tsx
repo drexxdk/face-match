@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Confetti } from '@/components/ui/confetti';
 import { sound } from '@/lib/sounds';
 import { createClient } from '@/lib/supabase/client';
+
 import { logger, logError } from '@/lib/logger';
 import { useRealtimeSubscription, getPayloadNew } from '@/lib/hooks/use-realtime';
 import { getGameSessionStatus, getPlayerJoinRecord } from '@/lib/queries';
