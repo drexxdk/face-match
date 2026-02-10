@@ -171,7 +171,10 @@ export function PasswordStrengthMeter({ password, showFeedback = true }: Passwor
         {[0, 1, 2, 3, 4].map((level) => (
           <div
             key={level}
-            className={cn('h-1.5 flex-1 rounded-full transition-colors', level <= strength.score ? strength.color : 'bg-muted')}
+            className={cn(
+              'h-1.5 flex-1 rounded-full transition-colors',
+              level <= strength.score ? strength.color : 'bg-muted',
+            )}
           />
         ))}
       </div>
@@ -182,7 +185,7 @@ export function PasswordStrengthMeter({ password, showFeedback = true }: Passwor
         <span
           className={cn(
             'font-medium',
-            strength.score <= 1 ? 'text-destructive' : strength.score === 2 ? 'text-game-neutral' : 'text-game-correct'
+            strength.score <= 1 ? 'text-destructive' : strength.score === 2 ? 'text-game-neutral' : 'text-game-correct',
           )}
         >
           {strength.label}

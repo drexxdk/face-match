@@ -864,7 +864,9 @@ function ActiveGameState({ state }: { state: ActiveState }) {
               <div
                 className={cn(
                   'flex-1 justify-center gap-2',
-                  state.gameType === 'guess_image' ? 'grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))]' : 'flex flex-col'
+                  state.gameType === 'guess_image'
+                    ? 'grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))]'
+                    : 'flex flex-col',
                 )}
               >
                 {state.question.options.map((option) => {

@@ -34,7 +34,7 @@ export const AnswerOptions = memo(function AnswerOptions({
     <div
       className={cn(
         'flex-1 justify-center gap-2',
-        gameType === 'guess_image' ? 'grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))]' : 'flex flex-col'
+        gameType === 'guess_image' ? 'grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))]' : 'flex flex-col',
       )}
     >
       {options.map((option, index) => {
