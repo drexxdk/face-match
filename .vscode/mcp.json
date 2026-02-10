@@ -6,7 +6,18 @@
       "env": {
         "SUPABASE_URL": "https://qnrfvlkhriwsqopmjpnn.supabase.co",
         "SUPABASE_ACCESS_TOKEN": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFucmZ2bGtocml3c3FvcG1qcG5uIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDExODM4NCwiZXhwIjoyMDg1Njk0Mzg0fQ.CEOgyoSpm8yqOHYR2mUv2FIcolcMtn-0yfcdQMgcP60"
-      }
+      },
+      "type": "stdio"
+    },
+    "io.github.upstash/context7": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["@upstash/context7-mcp@1.0.31"],
+      "env": {
+        "CONTEXT7_API_KEY": "ctx7sk-630925e6-2ca8-45cd-9b55-c14da77914a4"
+      },
+      "gallery": "https://api.mcp.github.com",
+      "version": "1.0.31"
     }
   }
 }

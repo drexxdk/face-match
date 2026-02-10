@@ -1,4 +1,4 @@
-import { Skeleton, GameCardSkeleton } from '@/components/ui/skeleton';
+import { Skeleton, GroupCardSkeleton } from '@/components/ui/skeleton';
 
 export default function Loading() {
   return (
@@ -17,9 +17,9 @@ export default function Loading() {
       <div>
         <Skeleton className="mb-4 h-8 w-48" />
         <div className="grid gap-4 md:grid-cols-3">
-          <GameCardSkeleton />
-          <GameCardSkeleton />
-          <GameCardSkeleton />
+          <GroupCardSkeleton />
+          <GroupCardSkeleton />
+          <GroupCardSkeleton />
         </div>
       </div>
 

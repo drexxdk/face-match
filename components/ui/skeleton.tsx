@@ -118,3 +118,26 @@ export function PlayerListSkeleton() {
     </div>
   );
 }
+
+export function PageHeroSkeleton() {
+  return (
+    <div className="bg-card relative overflow-hidden rounded-lg border">
+      <div className="relative overflow-hidden">
+        <div className="from-primary/10 absolute inset-0 bg-linear-to-br via-purple-500/10 to-pink-500/10" />
+        <div className="relative flex items-start justify-between gap-6 p-8">
+          <div className="flex items-start gap-6">
+            <Skeleton className="size-16 shrink-0 rounded-2xl" />
+            <div className="space-y-2">
+              <Skeleton className="h-9 w-48" />
+              <Skeleton className="h-6 w-64" />
+            </div>
+          </div>
+          <div className="flex shrink-0 gap-2">
+            <Skeleton className="size-10" />
+            <Skeleton className="size-10" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
