@@ -11,3 +11,4 @@ export {
   optimisticRemovePerson,
 } from './use-data';
 export { debounce, throttle, useDebounce, useThrottle, useDebouncedValue } from './use-debounce';
+export { useImagePreload, useGameImagePreload } from './use-image-preload';

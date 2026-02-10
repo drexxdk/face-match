@@ -1,25 +1,22 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FaCheck, FaXmark } from 'react-icons/fa6';
-import { createClient } from '@/lib/supabase/client';
 import { markPlayerAsLeft } from '@/app/actions/mark-player-left';
-import { Button } from '@/components/ui/button';
-import { Icon } from '@/components/ui/icon';
+import { AnswerOptions } from '@/components/game/answer-options';
+import { GameHeader } from '@/components/game/game-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { ErrorMessage } from '@/components/ui/error-message';
-import { CircularProgress } from '@/components/ui/progress';
-import { KeyboardShortcuts } from '@/lib/keyboard-shortcuts';
-import { sound, haptic } from '@/lib/sounds';
-import { logger, logError, getErrorMessage } from '@/lib/logger';
-import Image from 'next/image';
-import { cn } from '@/lib/utils';
-import type { Person, GameSession, GameType } from '@/lib/schemas';
-import { useLoading } from '@/lib/loading-context';
 import { useGameImagePreload } from '@/lib/hooks/use-image-preload';
+import { KeyboardShortcuts } from '@/lib/keyboard-shortcuts';
+import { useLoading } from '@/lib/loading-context';
+import { getErrorMessage, logError, logger } from '@/lib/logger';
+import type { GameSession, GameType, Person } from '@/lib/schemas';
+import { haptic, sound } from '@/lib/sounds';
+import { createClient } from '@/lib/supabase/client';
+import { cn } from '@/lib/utils';
+import { AnimatePresence, motion } from 'framer-motion';
+import Image from 'next/image';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface Question {
   person: Person;
@@ -798,33 +795,15 @@ function ActiveGameState({ state }: { state: ActiveState }) {
       </div>
       <Container className="my-auto flex flex-col gap-6">
         {/* Header */}
-        <div className="flex items-center justify-between gap-6">
-          <div className="flex flex-col gap-1 text-white">
-            <p className="text-2xl font-bold">
-              Score: {state.score}/{state.questions.length}
-            </p>
-            <Badge variant="secondary" className="text-xs">
-              Question {state.currentQuestion + 1} of {state.questions.length}
-            </Badge>
-          </div>
-          {state.gameSession.enable_timer !== false && (
-            <div className="inline-flex shrink-0 rounded-full border border-white/30 bg-black/40 p-2 text-white">
-              <CircularProgress value={state.timeLeft} max={30} size={80} strokeWidth={6}>
-                <span className="text-2xl font-bold">{state.timeLeft}</span>
-              </CircularProgress>
-            </div>
-          )}
-        </div>
-
-        {/* Progress Bar */}
-        <div className="h-1.5 w-full overflow-hidden rounded-full border border-white/30 bg-black/40">
-          <div
-            className="bg-gradient-primary h-full transition-all duration-300"
-            style={{
-              width: `${((state.currentQuestion + 1) / state.questions.length) * 100}%`,
-            }}
-          />
-        </div>
+        <GameHeader
+          playerName={state.playerName}
+          score={state.score}
+          totalQuestions={state.questions.length}
+          currentQuestion={state.currentQuestion}
+          timeLeft={state.timeLeft}
+          timerEnabled={state.gameSession.enable_timer !== false}
+          timeLimit={state.gameSession.time_limit_seconds || 30}
+        />
 
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
@@ -861,78 +840,15 @@ function ActiveGameState({ state }: { state: ActiveState }) {
                 )}
               </Card>
               {/* Question Options */}
-              <div
-                className={cn(
-                  'flex-1 justify-center gap-2',
-                  state.gameType === 'guess_image'
-                    ? 'grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))]'
-                    : 'flex flex-col',
-                )}
-              >
-                {state.question.options.map((option) => {
-                  const isSelected = state.selectedAnswer === option.id;
-                  const isCorrect = option.id === state.question.person.id;
-
-                  let buttonClass = 'text-lg font-semibold disabled:opacity-100 relative overflow-hidden border-2';
-                  let buttonVariant: 'default' | 'outline' = 'outline';
-
-                  if (state.answered) {
-                    if (isCorrect && isSelected) {
-                      buttonClass += ' bg-game-correct hover:bg-game-correct text-white border-game-correct';
-                      buttonVariant = 'default';
-                    } else if (isSelected && !isCorrect) {
-                      buttonClass += ' bg-game-incorrect hover:bg-game-incorrect text-white border-game-incorrect';
-                      buttonVariant = 'default';
-                    } else if (isCorrect) {
-                      buttonClass += ' bg-game-correct hover:bg-game-correct text-white border-game-correct';
-                      buttonVariant = 'default';
-                    }
-                  }
-
-                  return (
-                    <Button
-                      key={option.id}
-                      onClick={(e) => handleAnswerWithScrollPreservation(option.id, e)}
-                      disabled={state.answered}
-                      className={buttonClass}
-                      variant={buttonVariant}
-                      aria-label={
-                        state.gameType === 'guess_name'
-                          ? `Select ${option.name}${isSelected ? ' (selected)' : ''}${state.answered && isCorrect ? ' (correct answer)' : ''}${state.answered && isSelected && !isCorrect ? ' (incorrect)' : ''}`
-                          : `Select option ${state.question.options.indexOf(option) + 1}${isSelected ? ' (selected)' : ''}${state.answered && isCorrect ? ' (correct answer)' : ''}${state.answered && isSelected && !isCorrect ? ' (incorrect)' : ''}`
-                      }
-                      aria-pressed={isSelected}
-                      aria-disabled={state.answered}
-                      tabIndex={state.answered ? -1 : 0}
-                    >
-                      <span className="flex w-full items-center justify-between">
-                        {state.gameType === 'guess_name' ? (
-                          <span className="flex-1 truncate text-left">{option.name}</span>
-                        ) : (
-                          <div
-                            key={`option-image-${state.currentQuestion}-${option.id}`}
-                            className="relative flex max-h-50 min-h-25 min-w-25 flex-1 items-center justify-center"
-                          >
-                            <Image
-                              src={option.image_url || '/placeholder.png'}
-                              alt={option.name || 'Option image'}
-                              width={200}
-                              height={200}
-                              priority={true}
-                            />
-                          </div>
-                        )}
-                        {state.answered && (isCorrect || isSelected) && (
-                          <span className="flex size-6 shrink-0 items-center justify-center">
-                            {isCorrect && <Icon icon={FaCheck} size="lg" />}
-                            {isSelected && !isCorrect && <Icon icon={FaXmark} size="lg" />}
-                          </span>
-                        )}
-                      </span>
-                    </Button>
-                  );
-                })}
-              </div>
+              <AnswerOptions
+                gameType={state.gameType}
+                options={state.question.options}
+                correctPersonId={state.question.person.id}
+                selectedAnswer={state.selectedAnswer}
+                answered={state.answered}
+                onAnswer={handleAnswerWithScrollPreservation}
+                currentQuestion={state.currentQuestion}
+              />
             </div>
           </motion.div>
         </AnimatePresence>
