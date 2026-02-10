@@ -26,8 +26,8 @@ export default async function Home() {
       <section className="to-brand-tertiary relative flex-1 overflow-hidden bg-linear-to-br from-[hsl(262_83%_58%)] via-[hsl(217_91%_60%)]">
         {/* Animated background pattern */}
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-10 size-72 animate-pulse rounded-full bg-white blur-3xl" />
-          <div className="absolute right-10 bottom-20 size-96 animate-pulse rounded-full bg-white blur-3xl delay-1000" />
+          <div className="absolute top-20 left-10 size-72 rounded-full bg-white blur-3xl" />
+          <div className="absolute right-10 bottom-20 size-96 rounded-full bg-white blur-3xl" />
         </div>
 
         <div className="relative container mx-auto flex min-h-125 flex-col items-center justify-center gap-8 px-4 py-12 text-center md:min-h-150 md:gap-10 md:py-20">

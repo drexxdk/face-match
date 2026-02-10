@@ -63,6 +63,6 @@ export class ErrorBoundary extends Component<Props, State> {
       );
     }
 
-    return <div className={this.props.className}>{this.props.children}</div>;
+    return this.props.children;
   }
 }

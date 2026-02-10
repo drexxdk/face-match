@@ -100,7 +100,7 @@
 
   /* Smooth scrolling */
   html {
-    @apply scroll-smooth;
+    @apply overflow-y-scroll scroll-smooth;
   }
 
   /* Better text rendering */

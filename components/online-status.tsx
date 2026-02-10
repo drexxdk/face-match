@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 export function OnlineStatus() {
   const [isOnline, setIsOnline] = useState(true);
@@ -33,12 +32,9 @@ export function OnlineStatus() {
   }, []);
 
   return (
-    <AnimatePresence>
+    <>
       {showIndicator && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
+        <div
           className="fixed top-4 right-4 z-50 flex items-center gap-2 rounded-lg border px-4 py-2 shadow-lg"
           style={{
             background: isOnline
@@ -47,10 +43,10 @@ export function OnlineStatus() {
             color: 'white',
           }}
         >
-          <div className={`size-2 rounded-full ${isOnline ? 'bg-green-200' : 'bg-red-200'} animate-pulse`} />
+          <div className={`size-2 rounded-full ${isOnline ? 'bg-green-200' : 'bg-red-200'}`} />
           <span className="text-sm font-medium">{isOnline ? 'Back online' : 'No internet connection'}</span>
-        </motion.div>
+        </div>
       )}
-    </AnimatePresence>
+    </>
   );
 }

@@ -8,6 +8,6 @@ interface ErrorBoundaryWrapperProps {
   className?: string;
 }
 
-export function ErrorBoundaryWrapper({ children, className }: ErrorBoundaryWrapperProps) {
-  return <ErrorBoundary className={className}>{children}</ErrorBoundary>;
+export function ErrorBoundaryWrapper({ children }: ErrorBoundaryWrapperProps) {
+  return <ErrorBoundary>{children}</ErrorBoundary>;
 }

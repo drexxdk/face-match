@@ -2,7 +2,6 @@
 
 import { useState, memo } from 'react';
 import { FaPencil, FaTrash, FaSpinner, FaCheck, FaXmark, FaUser } from 'react-icons/fa6';
-import { AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import { Icon } from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
@@ -176,7 +175,7 @@ export function PeopleList({
 
   return (
     <StaggeredGrid className="grid gap-3">
-      <AnimatePresence mode="popLayout">
+      <div>
         {people.map((person) => (
           <StaggeredGridItem key={person.id}>
             <PersonCard
@@ -190,7 +189,7 @@ export function PeopleList({
             />
           </StaggeredGridItem>
         ))}
-      </AnimatePresence>
+      </div>
     </StaggeredGrid>
   );
 }

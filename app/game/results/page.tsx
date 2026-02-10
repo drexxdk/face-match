@@ -249,11 +249,11 @@ export default function GameResultsPage() {
   const grade = getGrade();
 
   return (
-    <div className="flex grow flex-col items-center justify-center gap-2 bg-linear-to-br from-purple-500 to-pink-500 p-4">
+    <div className="relative flex grow flex-col items-center p-4">
       {percentage >= 75 && <Confetti />}
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mt-8 mb-4 animate-bounce text-6xl">{grade.emoji}</div>
+          <div className="mt-8 mb-4 text-6xl">{grade.emoji}</div>
           <CardTitle className={`text-4xl font-bold ${grade.color}`}>{grade.text}</CardTitle>
           <CardDescription className="mt-2 text-lg">
             You know {score} out of {total} people

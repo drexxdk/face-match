@@ -81,7 +81,7 @@ export function InstallPrompt() {
   }
 
   return (
-    <div className="bg-card border-border animate-in slide-in-from-bottom-4 fixed right-4 bottom-4 left-4 z-50 rounded-lg border p-4 shadow-lg md:right-4 md:left-auto md:w-80">
+    <div className="bg-card border-border fixed right-4 bottom-4 left-4 z-50 rounded-lg border p-4 shadow-lg md:right-4 md:left-auto md:w-80">
       <div className="flex items-start gap-3">
         <div className="text-2xl">🎮</div>
         <div className="flex-1">

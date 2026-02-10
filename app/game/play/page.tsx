@@ -784,12 +784,12 @@ function ActiveGameState({ state }: { state: ActiveState }) {
     <div
       ref={containerRef}
       className={cn(
-        'flex grow flex-col items-center gap-2 overflow-x-clip overflow-y-auto bg-linear-to-br p-4 transition-colors duration-700',
+        'flex grow flex-col items-center gap-2 bg-linear-to-br p-4 transition-colors duration-700',
         state.lastAnswerCorrect === true
           ? 'from-green-600 to-green-800'
           : state.lastAnswerCorrect === false
             ? 'from-red-600 to-red-800'
-            : 'from-purple-500 to-pink-500',
+            : '',
       )}
       role="main"
       aria-label="Game play area"
@@ -830,113 +830,111 @@ function ActiveGameState({ state }: { state: ActiveState }) {
           />
         </div>
 
-        <div className="relative flex-1 overflow-x-hidden pb-8">
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={state.currentQuestion}
-              initial={{ x: '100%', opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: '-100%', opacity: 0 }}
-              transition={{ duration: 0.5, ease: 'easeInOut' }}
-              className="min-h-125 w-full"
-            >
-              <div className={`flex gap-6 ${state.gameType === 'guess_image' ? 'flex-col' : 'flex-col lg:flex-row'}`}>
-                <Card className="shrink-0 justify-center">
-                  <CardHeader>
-                    <CardTitle className="text-center text-2xl">
-                      {state.gameType === 'guess_name' ? 'Who is this?' : 'Who is ' + state.question.person.name + '?'}
-                    </CardTitle>
-                  </CardHeader>
-                  {state.gameType === 'guess_name' && (
-                    <CardContent>
-                      <div className="flex justify-center">
-                        <div className="aspect-square rounded-lg border-4 border-gray-200">
-                          <Image
-                            width={256}
-                            height={256}
-                            key={`person-image-${state.currentQuestion}-${state.question.person.id}`}
-                            src={state.question.person.image_url || '/placeholder.png'}
-                            alt={`Photo of person for question ${state.currentQuestion + 1}`}
-                            priority={true}
-                            aria-label={`Question ${state.currentQuestion + 1}: Who is this person?`}
-                          />
-                        </div>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={state.currentQuestion}
+            initial={{ x: '100%', opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: '-100%', opacity: 0 }}
+            transition={{ duration: 0.5, ease: 'easeInOut' }}
+            className="min-h-125 w-full"
+          >
+            <div className={`flex gap-6 ${state.gameType === 'guess_image' ? 'flex-col' : 'flex-col lg:flex-row'}`}>
+              <Card className="shrink-0 justify-center">
+                <CardHeader>
+                  <CardTitle className="text-center text-2xl">
+                    {state.gameType === 'guess_name' ? 'Who is this?' : 'Who is ' + state.question.person.name + '?'}
+                  </CardTitle>
+                </CardHeader>
+                {state.gameType === 'guess_name' && (
+                  <CardContent>
+                    <div className="flex justify-center">
+                      <div className="aspect-square rounded-lg border-4 border-gray-200">
+                        <Image
+                          width={256}
+                          height={256}
+                          key={`person-image-${state.currentQuestion}-${state.question.person.id}`}
+                          src={state.question.person.image_url || '/placeholder.png'}
+                          alt={`Photo of person for question ${state.currentQuestion + 1}`}
+                          priority={true}
+                          aria-label={`Question ${state.currentQuestion + 1}: Who is this person?`}
+                        />
                       </div>
-                    </CardContent>
-                  )}
-                </Card>
-                {/* Question Options */}
-                <div
-                  className={`flex-1 justify-center gap-2 ${state.gameType === 'guess_image' ? 'grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))]' : 'flex flex-col'}`}
-                >
-                  {state.question.options.map((option) => {
-                    const isSelected = state.selectedAnswer === option.id;
-                    const isCorrect = option.id === state.question.person.id;
+                    </div>
+                  </CardContent>
+                )}
+              </Card>
+              {/* Question Options */}
+              <div
+                className={`flex-1 justify-center gap-2 ${state.gameType === 'guess_image' ? 'grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))]' : 'flex flex-col'}`}
+              >
+                {state.question.options.map((option) => {
+                  const isSelected = state.selectedAnswer === option.id;
+                  const isCorrect = option.id === state.question.person.id;
 
-                    let buttonClass = 'text-lg font-semibold disabled:opacity-100 relative overflow-hidden border-2';
-                    let buttonVariant: 'default' | 'outline' = 'outline';
+                  let buttonClass = 'text-lg font-semibold disabled:opacity-100 relative overflow-hidden border-2';
+                  let buttonVariant: 'default' | 'outline' = 'outline';
 
-                    if (state.answered) {
-                      if (isCorrect && isSelected) {
-                        buttonClass += ' bg-green-500 hover:bg-green-500 text-white border-green-500 animate-pulse';
-                        buttonVariant = 'default';
-                      } else if (isSelected && !isCorrect) {
-                        buttonClass += ' bg-red-500 hover:bg-red-500 text-white border-red-500';
-                        buttonVariant = 'default';
-                      } else if (isCorrect) {
-                        buttonClass += ' bg-green-500 hover:bg-green-500 text-white border-green-500';
-                        buttonVariant = 'default';
-                      }
+                  if (state.answered) {
+                    if (isCorrect && isSelected) {
+                      buttonClass += ' bg-green-500 hover:bg-green-500 text-white border-green-500 animate-pulse';
+                      buttonVariant = 'default';
+                    } else if (isSelected && !isCorrect) {
+                      buttonClass += ' bg-red-500 hover:bg-red-500 text-white border-red-500';
+                      buttonVariant = 'default';
+                    } else if (isCorrect) {
+                      buttonClass += ' bg-green-500 hover:bg-green-500 text-white border-green-500';
+                      buttonVariant = 'default';
                     }
+                  }
 
-                    return (
-                      <Button
-                        key={option.id}
-                        onClick={(e) => handleAnswerWithScrollPreservation(option.id, e)}
-                        disabled={state.answered}
-                        className={buttonClass}
-                        variant={buttonVariant}
-                        aria-label={
-                          state.gameType === 'guess_name'
-                            ? `Select ${option.name}${isSelected ? ' (selected)' : ''}${state.answered && isCorrect ? ' (correct answer)' : ''}${state.answered && isSelected && !isCorrect ? ' (incorrect)' : ''}`
-                            : `Select option ${state.question.options.indexOf(option) + 1}${isSelected ? ' (selected)' : ''}${state.answered && isCorrect ? ' (correct answer)' : ''}${state.answered && isSelected && !isCorrect ? ' (incorrect)' : ''}`
-                        }
-                        aria-pressed={isSelected}
-                        aria-disabled={state.answered}
-                        tabIndex={state.answered ? -1 : 0}
-                      >
-                        <span className="flex w-full items-center justify-between">
-                          {state.gameType === 'guess_name' ? (
-                            <span className="flex-1 truncate text-left">{option.name}</span>
-                          ) : (
-                            <div
-                              key={`option-image-${state.currentQuestion}-${option.id}`}
-                              className="relative flex max-h-50 min-h-25 min-w-25 flex-1 items-center justify-center"
-                            >
-                              <Image
-                                src={option.image_url || '/placeholder.png'}
-                                alt={option.name || 'Option image'}
-                                width={200}
-                                height={200}
-                                priority={true}
-                              />
-                            </div>
-                          )}
-                          {state.answered && (isCorrect || isSelected) && (
-                            <span className="flex size-6 shrink-0 items-center justify-center">
-                              {isCorrect && <Icon icon={FaCheck} size="lg" />}
-                              {isSelected && !isCorrect && <Icon icon={FaXmark} size="lg" />}
-                            </span>
-                          )}
-                        </span>
-                      </Button>
-                    );
-                  })}
-                </div>
+                  return (
+                    <Button
+                      key={option.id}
+                      onClick={(e) => handleAnswerWithScrollPreservation(option.id, e)}
+                      disabled={state.answered}
+                      className={buttonClass}
+                      variant={buttonVariant}
+                      aria-label={
+                        state.gameType === 'guess_name'
+                          ? `Select ${option.name}${isSelected ? ' (selected)' : ''}${state.answered && isCorrect ? ' (correct answer)' : ''}${state.answered && isSelected && !isCorrect ? ' (incorrect)' : ''}`
+                          : `Select option ${state.question.options.indexOf(option) + 1}${isSelected ? ' (selected)' : ''}${state.answered && isCorrect ? ' (correct answer)' : ''}${state.answered && isSelected && !isCorrect ? ' (incorrect)' : ''}`
+                      }
+                      aria-pressed={isSelected}
+                      aria-disabled={state.answered}
+                      tabIndex={state.answered ? -1 : 0}
+                    >
+                      <span className="flex w-full items-center justify-between">
+                        {state.gameType === 'guess_name' ? (
+                          <span className="flex-1 truncate text-left">{option.name}</span>
+                        ) : (
+                          <div
+                            key={`option-image-${state.currentQuestion}-${option.id}`}
+                            className="relative flex max-h-50 min-h-25 min-w-25 flex-1 items-center justify-center"
+                          >
+                            <Image
+                              src={option.image_url || '/placeholder.png'}
+                              alt={option.name || 'Option image'}
+                              width={200}
+                              height={200}
+                              priority={true}
+                            />
+                          </div>
+                        )}
+                        {state.answered && (isCorrect || isSelected) && (
+                          <span className="flex size-6 shrink-0 items-center justify-center">
+                            {isCorrect && <Icon icon={FaCheck} size="lg" />}
+                            {isSelected && !isCorrect && <Icon icon={FaXmark} size="lg" />}
+                          </span>
+                        )}
+                      </span>
+                    </Button>
+                  );
+                })}
               </div>
-            </motion.div>
-          </AnimatePresence>
-        </div>
+            </div>
+          </motion.div>
+        </AnimatePresence>
       </Container>
     </div>
   );

@@ -6,15 +6,15 @@ import { ErrorBoundaryWrapper } from '@/components/error-boundary-wrapper';
 
 export default function GameLayout({ children }: { children: React.ReactNode }) {
   return (
-    <main className="flex h-dvh flex-col overflow-hidden">
+    <main className="flex min-h-screen flex-col overflow-hidden bg-linear-to-br from-purple-500 to-pink-500">
       <Header />
-      <div className="relative flex min-h-0 flex-1 flex-col overflow-auto">
-        <LoadingProvider>
-          <Suspense fallback={<LoadingOverlay />}>
-            <ErrorBoundaryWrapper className="flex min-h-full flex-1 flex-col">{children}</ErrorBoundaryWrapper>
-          </Suspense>
-        </LoadingProvider>
-      </div>
+      <LoadingProvider>
+        <Suspense fallback={<LoadingOverlay />}>
+          <ErrorBoundaryWrapper>
+            <div className="relative flex flex-1 overflow-x-hidden">{children}</div>
+          </ErrorBoundaryWrapper>
+        </Suspense>
+      </LoadingProvider>
     </main>
   );
 }
