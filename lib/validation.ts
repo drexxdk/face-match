@@ -32,7 +32,7 @@ export const optionsCountSchema = z
   .number()
   .int('Options count must be a whole number')
   .min(2, 'Must have at least 2 options')
-  .max(10, 'Cannot have more than 10 options');
+  .max(4, 'Cannot have more than 4 options');
 
 /**
  * Validate and sanitize input with detailed error messages

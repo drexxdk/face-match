@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useEffect, useCallback, memo } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import toast from 'react-hot-toast';
 import { getErrorMessage } from '@/lib/logger';
-import { sanitizeGroupName, validateLength } from '@/lib/security';
 import type { Group } from '@/lib/schemas';
+import { sanitizeGroupName, validateLength } from '@/lib/security';
+import { createClient } from '@/lib/supabase/client';
+import { memo, useCallback, useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
 interface GroupSettingsProps {
   groupId: string;
@@ -162,7 +162,7 @@ export const GroupSettings = memo(function GroupSettings({
             id="options-count"
             type="range"
             min="2"
-            max={Math.min(peopleCount, 10)}
+            max={Math.min(peopleCount, 4)}
             step="1"
             value={optionsCount}
             onChange={(e) => setOptionsCount(parseInt(e.target.value) || 4)}

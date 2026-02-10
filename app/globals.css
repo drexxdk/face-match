@@ -270,4 +270,14 @@
   .rounded-glass-lg {
     @apply rounded-3xl;
   }
+
+  /* Selection indicator styles */
+  .selection-indicator {
+    @apply bg-primary absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full text-white shadow-lg;
+  }
+
+  .selection-indicator::before {
+    content: '✓';
+    @apply text-xs font-bold;
+  }
 }

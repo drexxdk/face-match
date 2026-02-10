@@ -1,19 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import toast from 'react-hot-toast';
-import { getErrorMessage, logError } from '@/lib/logger';
-import { sanitizeGroupName, validateLength } from '@/lib/security';
 import { useGroupNameValidation } from '@/lib/hooks/use-group-name-validation';
 import { useLoading } from '@/lib/loading-context';
+import { getErrorMessage, logError } from '@/lib/logger';
 import type { Group } from '@/lib/schemas';
+import { sanitizeGroupName, validateLength } from '@/lib/security';
+import { createClient } from '@/lib/supabase/client';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
 interface GroupModalProps {
   open: boolean;
@@ -164,7 +164,7 @@ export function GroupModal({ open, onOpenChange, editGroup, onSuccess, peopleCou
     }
   };
 
-  const maxOptions = Math.min(peopleCount, 10);
+  const maxOptions = Math.min(peopleCount, 4);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

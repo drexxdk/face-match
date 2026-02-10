@@ -443,8 +443,8 @@ export default function GamePlayPage() {
     async (answerId: string | null) => {
       if (answered || !gameSession || !joinSessionId) return;
 
-      setAnswered(true);
       setSelectedAnswer(answerId);
+      setAnswered(true);
 
       const isCorrect = answerId === questions[currentQuestion].person.id;
       setLastAnswerCorrect(isCorrect);
